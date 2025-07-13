@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +23,52 @@ const faqItems = [
     }
 ];
 
+const HomeSchemaMarkup = () => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Bangla Tools HUB',
+    url: baseUrl,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${baseUrl}/tools?q={search_term_string}`
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+
+  const organizationSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Bangla Tools HUB',
+    url: baseUrl,
+    logo: `${baseUrl}/logo.png`, // Assuming you have a logo at public/logo.png
+    sameAs: [
+      // Add URLs to your social media profiles here
+      // "https://www.facebook.com/yourprofile",
+      // "https://www.twitter.com/yourprofile",
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+      />
+    </>
+  );
+};
+
+
 export default async function Home() {
   const allTools = await getTools();
   const allPosts = await getBlogPosts();
@@ -31,6 +78,7 @@ export default async function Home() {
 
   return (
     <div className="space-y-16 sm:space-y-24">
+       <HomeSchemaMarkup />
       <section className="text-center pt-8">
         <h1 className="font-headline text-5xl md:text-7xl font-bold tracking-tight text-primary-foreground">
           বাংলা টুলস হাব
