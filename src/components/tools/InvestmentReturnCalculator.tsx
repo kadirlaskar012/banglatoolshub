@@ -13,9 +13,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Share2 } from 'lucide-react';
+import { Share2, Download } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import html2canvas from 'html2canvas';
 
 interface BreakdownRow {
     year: number;
@@ -36,9 +35,8 @@ const OneTimeInvestmentCalculator = () => {
     const [adjustForInflation, setAdjustForInflation] = useState(false);
     const [inflationRate, setInflationRate] = useState(6);
     const { toast } = useToast();
-    const resultCardRef = useRef<HTMLDivElement>(null);
-
-    const { futureValue, totalInvestment, totalInterest, realReturnValue, breakdown, chartData } = useMemo(() => {
+    
+    const calculationResult = useMemo(() => {
         const p = Number(principal);
         const r = Number(rate) / 100;
         const t = Number(years);
@@ -86,53 +84,62 @@ const OneTimeInvestmentCalculator = () => {
     }, [principal, rate, years, compounding, adjustForInflation, inflationRate]);
     
     const handleShare = async () => {
-        const element = resultCardRef.current;
-        if (!element) {
-            toast({ title: "ত্রুটি", description: "ফলাফল কার্ড খুঁজে পাওয়া যায়নি।", variant: "destructive" });
-            return;
-        }
+        const { futureValue, totalInvestment, totalInterest } = calculationResult;
+        const shareText = `আমার এককালীন বিনিয়োগের ফলাফল:\n\n- মোট বিনিয়োগ: ${formatCurrency(totalInvestment)}\n- মোট সুদ: ${formatCurrency(totalInterest)}\n- ভবিষ্যতের মোট মূল্য: ${formatCurrency(futureValue)}\n\nBangla Tools HUB থেকে হিসাব করা হয়েছে।`;
 
-        try {
-            const canvas = await html2canvas(element, { 
-                backgroundColor: 'hsl(var(--card))',
-                scale: 2,
-                useCORS: true,
-            });
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    toast({ title: "ত্রুটি", description: "ছবি তৈরি করা সম্ভব হয়নি।", variant: "destructive" });
-                    return;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'আমার বিনিয়োগের ফলাফল',
+                    text: shareText,
+                    url: window.location.href,
+                });
+            } catch (err) {
+                 if ((err as Error).name !== 'AbortError') {
+                    console.error("Share failed:", err);
+                    navigator.clipboard.writeText(shareText);
+                    toast({ title: "শেয়ার ব্যর্থ হয়েছে", description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।" });
                 }
-                
-                const file = new File([blob], "investment-result.png", { type: "image/png" });
-                
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            title: 'আমার বিনিয়োগের ফলাফল',
-                            text: 'আমার এককালীন বিনিয়োগের সম্ভাব্য ফলাফল দেখুন।',
-                            files: [file],
-                        });
-                    } catch (err) {
-                        if ((err as Error).name !== 'AbortError') {
-                            console.error("Share failed:", err);
-                             toast({ title: "শেয়ার ব্যর্থ হয়েছে", description: "শেয়ার করা সম্ভব হয়নি।", variant: "destructive" });
-                        }
-                    }
-                } else {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = 'investment-result.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    toast({ title: "ডাউনলোড হয়েছে!", description: "ফলাফলের ছবিটি ডাউনলোড করা হয়েছে।" });
-                }
-            }, 'image/png');
-        } catch (err) {
-            console.error(err);
-            toast({ title: "ত্রুটি", description: "ফলাফল শেয়ার বা ডাউনলোড করা সম্ভব হয়নি।", variant: "destructive" });
+            }
+        } else {
+            navigator.clipboard.writeText(shareText);
+            toast({ title: "কপি হয়েছে!", description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।" });
         }
+    };
+
+    const handleDownload = () => {
+        const { futureValue, totalInvestment, totalInterest, breakdown } = calculationResult;
+
+        let downloadText = `এককালীন বিনিয়োগের ফলাফল\n=========================\n\n`;
+        downloadText += `প্রাথমিক তথ্য:\n`;
+        downloadText += `- প্রাথমিক বিনিয়োগ: ${formatCurrency(principal)}\n`;
+        downloadText += `- বার্ষিক সুদের হার: ${rate}%\n`;
+        downloadText += `- সময়কাল: ${years} বছর\n\n`;
+        
+        downloadText += `ফলাফল:\n`;
+        downloadText += `- মোট বিনিয়োগ: ${formatCurrency(totalInvestment)}\n`;
+        downloadText += `- মোট অর্জিত সুদ: ${formatCurrency(totalInterest)}\n`;
+        downloadText += `- ভবিষ্যতের মোট মূল্য: ${formatCurrency(futureValue)}\n\n`;
+
+        if (breakdown.length > 0) {
+            downloadText += `বছর অনুযায়ী বিস্তারিত হিসাব:\n-----------------------------\n`;
+            downloadText += `বছর\tশুরুর ব্যালেন্স\tঅর্জিত সুদ\tশেষের ব্যালেন্স\n`;
+            breakdown.forEach(row => {
+                downloadText += `${row.year}\t${formatCurrency(row.openingBalance)}\t${formatCurrency(row.interestEarned)}\t${formatCurrency(row.closingBalance)}\n`;
+            });
+        }
+        
+        const blob = new Blob([downloadText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'investment-result.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast({ title: "ডাউনলোড হয়েছে!", description: "ফলাফলের টেক্সট ফাইল ডাউনলোড করা হয়েছে।" });
     };
 
     return (
@@ -185,61 +192,63 @@ const OneTimeInvestmentCalculator = () => {
                 </Card>
             </div>
             <div className="space-y-6">
-                <div ref={resultCardRef} className="bg-card p-4 rounded-lg">
-                    <Card className="w-full text-center bg-primary/5">
-                        <CardHeader>
-                            <div className="flex justify-between items-center">
-                                <CardTitle className="font-headline">সম্ভাব্য ফলাফল</CardTitle>
-                                 <Button variant="ghost" size="icon" onClick={handleShare}>
-                                    <Share2 className="w-5 h-5"/>
-                                    <span className="sr-only">ফলাফল শেয়ার করুন</span>
-                                </Button>
+                <Card className="w-full text-center bg-primary/5">
+                    <CardHeader>
+                        <CardTitle className="font-headline">সম্ভাব্য ফলাফল</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="p-2 rounded-lg bg-background">
+                                <p className="text-muted-foreground">মোট বিনিয়োগ</p>
+                                <p className="font-semibold text-lg">{formatCurrency(calculationResult.totalInvestment)}</p>
                             </div>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div className="p-2 rounded-lg bg-background">
-                                    <p className="text-muted-foreground">মোট বিনিয়োগ</p>
-                                    <p className="font-semibold text-lg">{formatCurrency(totalInvestment)}</p>
-                                </div>
-                                 <div className="p-2 rounded-lg bg-background">
-                                    <p className="text-muted-foreground">মোট সুদ</p>
-                                    <p className="font-semibold text-lg">{formatCurrency(totalInterest)}</p>
-                                </div>
+                                <p className="text-muted-foreground">মোট সুদ</p>
+                                <p className="font-semibold text-lg">{formatCurrency(calculationResult.totalInterest)}</p>
                             </div>
-                            <div className="p-4 rounded-lg bg-primary/10">
-                                <p className="text-lg text-primary font-semibold">ভবিষ্যতের মোট মূল্য</p>
-                                <p className="text-3xl font-bold text-primary">{formatCurrency(futureValue)}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-primary/10">
+                            <p className="text-lg text-primary font-semibold">ভবিষ্যতের মোট মূল্য</p>
+                            <p className="text-3xl font-bold text-primary">{formatCurrency(calculationResult.futureValue)}</p>
+                        </div>
+                            {adjustForInflation && (
+                                <div className="p-2 rounded-lg bg-background text-sm">
+                                <p className="text-muted-foreground">মুদ্রাস্ফীতির পর প্রকৃত মূল্য</p>
+                                <p className="font-semibold text-lg">{formatCurrency(calculationResult.realReturnValue)}</p>
                             </div>
-                             {adjustForInflation && (
-                                 <div className="p-2 rounded-lg bg-background text-sm">
-                                    <p className="text-muted-foreground">মুদ্রাস্ফীতির পর প্রকৃত মূল্য</p>
-                                    <p className="font-semibold text-lg">{formatCurrency(realReturnValue)}</p>
-                                </div>
-                             )}
+                            )}
+                    </CardContent>
+                    <CardFooter className="flex justify-center gap-2">
+                        <Button variant="outline" onClick={handleShare}>
+                            <Share2 className="w-4 h-4 mr-2"/>
+                            শেয়ার করুন
+                        </Button>
+                        <Button onClick={handleDownload}>
+                            <Download className="w-4 h-4 mr-2"/>
+                            ডাউনলোড করুন
+                        </Button>
+                    </CardFooter>
+                </Card>
+                
+                {calculationResult.chartData.length > 1 && (
+                    <Card>
+                        <CardHeader><CardTitle className="text-lg font-headline">বিনিয়োগের বৃদ্ধি</CardTitle></CardHeader>
+                        <CardContent className="h-48">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={calculationResult.chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
+                                    <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                                    <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Value"]} />
+                                    <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
+                                </AreaChart>
+                            </ResponsiveContainer>
                         </CardContent>
                     </Card>
-
-                     {chartData.length > 1 && (
-                        <Card className="mt-6">
-                            <CardHeader><CardTitle className="text-lg font-headline">বিনিয়োগের বৃদ্ধি</CardTitle></CardHeader>
-                            <CardContent className="h-48">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={chartData}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} />
-                                        <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                                        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Value"]} />
-                                        <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
+                )}
             </div>
 
-             {breakdown.length > 0 && (
+             {calculationResult.breakdown.length > 0 && (
                 <div className="lg:col-span-2">
                     <Accordion type="single" collapsible>
                         <AccordionItem value="breakdown">
@@ -255,7 +264,7 @@ const OneTimeInvestmentCalculator = () => {
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {breakdown.map(row => (
+                                        {calculationResult.breakdown.map(row => (
                                             <TableRow key={row.year}>
                                                 <TableCell>{row.year}</TableCell>
                                                 <TableCell>{formatCurrency(row.openingBalance)}</TableCell>
@@ -279,15 +288,14 @@ const SIPCalculator = () => {
     const [rate, setRate] = useState(12);
     const [years, setYears] = useState(10);
     const { toast } = useToast();
-    const resultCardRef = useRef<HTMLDivElement>(null);
     
-    const { futureValue, totalInvestment, totalReturns, chartData } = useMemo(() => {
+    const calculationResult = useMemo(() => {
         const p = Number(monthlyInvestment);
         const r = Number(rate) / 100;
         const t = Number(years);
         
         if (p <= 0 || r <= 0 || t <= 0) {
-            return { futureValue: 0, totalInvestment: 0, totalReturns: 0, chartData: [] };
+            return { futureValue: 0, totalInvestment: 0, totalReturns: 0, chartData: [], breakdown: [] };
         }
 
         const n = t * 12; // total number of installments
@@ -298,18 +306,29 @@ const SIPCalculator = () => {
         const totalRet = fv - totalInv;
         
         const chartDataPoints: any[] = [{ year: 0, 'বিনিয়োগ': 0, 'মোট মূল্য': 0 }];
+        const breakdownData: BreakdownRow[] = [];
         let cumulativeInvestment = 0;
         let currentBalance = 0;
 
         for (let year = 1; year <= t; year++) {
+            const openingBalanceYear = currentBalance;
+            let interestThisYear = 0;
             for(let month = 1; month <= 12; month++) {
-                cumulativeInvestment += p;
+                const interestThisMonth = (currentBalance + p) * i;
+                interestThisYear += interestThisMonth;
                 currentBalance = (currentBalance + p) * (1 + i);
+                cumulativeInvestment += p;
             }
              chartDataPoints.push({
                 year,
                 'বিনিয়োগ': cumulativeInvestment,
                 'মোট মূল্য': Math.round(currentBalance)
+            });
+            breakdownData.push({
+                year: year,
+                openingBalance: openingBalanceYear,
+                interestEarned: interestThisYear,
+                closingBalance: currentBalance,
             });
         }
 
@@ -317,58 +336,68 @@ const SIPCalculator = () => {
             futureValue: Math.round(fv),
             totalInvestment: Math.round(totalInv),
             totalReturns: Math.round(totalRet),
-            chartData: chartDataPoints
+            chartData: chartDataPoints,
+            breakdown: breakdownData,
         };
     }, [monthlyInvestment, rate, years]);
     
-     const handleShare = async () => {
-        const element = resultCardRef.current;
-        if (!element) {
-            toast({ title: "ত্রুটি", description: "ফলাফল কার্ড খুঁজে পাওয়া যায়নি।", variant: "destructive" });
-            return;
-        }
+    const handleShare = async () => {
+        const { futureValue, totalInvestment, totalReturns } = calculationResult;
+        const shareText = `আমার মাসিক বিনিয়োগের (SIP) ফলাফল:\n\n- মোট বিনিয়োগ: ${formatCurrency(totalInvestment)}\n- মোট রিটার্ন: ${formatCurrency(totalReturns)}\n- ভবিষ্যতের মোট মূল্য: ${formatCurrency(futureValue)}\n\nBangla Tools HUB থেকে হিসাব করা হয়েছে।`;
 
-        try {
-            const canvas = await html2canvas(element, { 
-                backgroundColor: 'hsl(var(--card))',
-                scale: 2,
-                useCORS: true,
-            });
-            canvas.toBlob(async (blob) => {
-                if (!blob) {
-                    toast({ title: "ত্রুটি", description: "ছবি তৈরি করা সম্ভব হয়নি।", variant: "destructive" });
-                    return;
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'আমার SIP বিনিয়োগের ফলাফল',
+                    text: shareText,
+                    url: window.location.href,
+                });
+            } catch (err) {
+                 if ((err as Error).name !== 'AbortError') {
+                    console.error("Share failed:", err);
+                    navigator.clipboard.writeText(shareText);
+                    toast({ title: "শেয়ার ব্যর্থ হয়েছে", description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।" });
                 }
-                
-                const file = new File([blob], "sip-result.png", { type: "image/png" });
-                
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({
-                            title: 'আমার SIP বিনিয়োগের ফলাফল',
-                            text: 'আমার মাসিক বিনিয়োগের (SIP) সম্ভাব্য ফলাফল দেখুন।',
-                            files: [file],
-                        });
-                    } catch (err) {
-                        if ((err as Error).name !== 'AbortError') {
-                            console.error("Share failed:", err);
-                             toast({ title: "শেয়ার ব্যর্থ হয়েছে", description: "শেয়ার করা সম্ভব হয়নি।", variant: "destructive" });
-                        }
-                    }
-                } else {
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = 'sip-result.png';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    toast({ title: "ডাউনলোড হয়েছে!", description: "ফলাফলের ছবিটি ডাউনলোড করা হয়েছে।" });
-                }
-            }, 'image/png');
-        } catch (err) {
-            console.error(err);
-            toast({ title: "ত্রুটি", description: "ফলাফল শেয়ার বা ডাউনলোড করা সম্ভব হয়নি।", variant: "destructive" });
+            }
+        } else {
+            navigator.clipboard.writeText(shareText);
+            toast({ title: "কপি হয়েছে!", description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।" });
         }
+    };
+
+    const handleDownload = () => {
+        const { futureValue, totalInvestment, totalReturns, breakdown } = calculationResult;
+
+        let downloadText = `মাসিক বিনিয়োগের (SIP) ফলাফল\n=========================\n\n`;
+        downloadText += `প্রাথমিক তথ্য:\n`;
+        downloadText += `- মাসিক বিনিয়োগ: ${formatCurrency(monthlyInvestment)}\n`;
+        downloadText += `- প্রত্যাশিত বার্ষিক রিটার্ন: ${rate}%\n`;
+        downloadText += `- সময়কাল: ${years} বছর\n\n`;
+        
+        downloadText += `ফলাফল:\n`;
+        downloadText += `- মোট বিনিয়োগ: ${formatCurrency(totalInvestment)}\n`;
+        downloadText += `- মোট অর্জিত রিটার্ন: ${formatCurrency(totalReturns)}\n`;
+        downloadText += `- ভবিষ্যতের মোট মূল্য: ${formatCurrency(futureValue)}\n\n`;
+
+        if (breakdown.length > 0) {
+            downloadText += `বছর অনুযায়ী বিস্তারিত হিসাব:\n-----------------------------\n`;
+            downloadText += `বছর\tশুরুর ব্যালেন্স\tঅর্জিত সুদ\tশেষের ব্যালেন্স\n`;
+            breakdown.forEach(row => {
+                downloadText += `${row.year}\t${formatCurrency(row.openingBalance)}\t${formatCurrency(row.interestEarned)}\t${formatCurrency(row.closingBalance)}\n`;
+            });
+        }
+        
+        const blob = new Blob([downloadText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'sip-result.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast({ title: "ডাউনলোড হয়েছে!", description: "ফলাফলের টেক্সট ফাইল ডাউনলোড করা হয়েছে।" });
     };
 
      return (
@@ -391,53 +420,55 @@ const SIPCalculator = () => {
                 </div>
             </div>
             <div className="space-y-6">
-                <div ref={resultCardRef} className="bg-card p-4 rounded-lg">
-                     <Card className="w-full text-center bg-primary/5">
-                        <CardHeader>
-                            <div className="flex justify-between items-center">
-                                <CardTitle className="font-headline">সম্ভাব্য ফলাফল</CardTitle>
-                                <Button variant="ghost" size="icon" onClick={handleShare}>
-                                    <Share2 className="w-5 h-5"/>
-                                    <span className="sr-only">ফলাফল শেয়ার করুন</span>
-                                </Button>
+                <Card className="w-full text-center bg-primary/5">
+                    <CardHeader>
+                        <CardTitle className="font-headline">সম্ভাব্য ফলাফল</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                            <div className="p-2 rounded-lg bg-background">
+                                <p className="text-muted-foreground">মোট বিনিয়োগ</p>
+                                <p className="font-semibold text-lg">{formatCurrency(calculationResult.totalInvestment)}</p>
                             </div>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                             <div className="grid grid-cols-2 gap-2 text-sm">
                                 <div className="p-2 rounded-lg bg-background">
-                                    <p className="text-muted-foreground">মোট বিনিয়োগ</p>
-                                    <p className="font-semibold text-lg">{formatCurrency(totalInvestment)}</p>
-                                </div>
-                                 <div className="p-2 rounded-lg bg-background">
-                                    <p className="text-muted-foreground">মোট রিটার্ন</p>
-                                    <p className="font-semibold text-lg">{formatCurrency(totalReturns)}</p>
-                                </div>
+                                <p className="text-muted-foreground">মোট রিটার্ন</p>
+                                <p className="font-semibold text-lg">{formatCurrency(calculationResult.totalReturns)}</p>
                             </div>
-                            <div className="p-4 rounded-lg bg-primary/10">
-                                <p className="text-lg text-primary font-semibold">ভবিষ্যতের মোট মূল্য</p>
-                                <p className="text-3xl font-bold text-primary">{formatCurrency(futureValue)}</p>
-                            </div>
+                        </div>
+                        <div className="p-4 rounded-lg bg-primary/10">
+                            <p className="text-lg text-primary font-semibold">ভবিষ্যতের মোট মূল্য</p>
+                            <p className="text-3xl font-bold text-primary">{formatCurrency(calculationResult.futureValue)}</p>
+                        </div>
+                    </CardContent>
+                    <CardFooter className="flex justify-center gap-2">
+                        <Button variant="outline" onClick={handleShare}>
+                            <Share2 className="w-4 h-4 mr-2"/>
+                            শেয়ার করুন
+                        </Button>
+                        <Button onClick={handleDownload}>
+                            <Download className="w-4 h-4 mr-2"/>
+                            ডাউনলোড করুন
+                        </Button>
+                    </CardFooter>
+                </Card>
+
+                {calculationResult.chartData.length > 1 && (
+                        <Card>
+                        <CardHeader><CardTitle className="text-lg font-headline">বিনিয়োগ বনাম রিটার্ন</CardTitle></CardHeader>
+                        <CardContent className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={calculationResult.chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} unit=" বছর" />
+                                    <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
+                                    <Tooltip formatter={(value) => [formatCurrency(Number(value)), ""]} />
+                                    <Area type="monotone" dataKey="বিনিয়োগ" stackId="1" name="মোট বিনিয়োগ" stroke="#8884d8" fill="#8884d8" fillOpacity={0.2} />
+                                    <Area type="monotone" dataKey="মোট মূল্য" stackId="1" name="মোট রিটার্ন" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
+                                </AreaChart>
+                            </ResponsiveContainer>
                         </CardContent>
                     </Card>
-
-                    {chartData.length > 1 && (
-                         <Card className="mt-6">
-                            <CardHeader><CardTitle className="text-lg font-headline">বিনিয়োগ বনাম রিটার্ন</CardTitle></CardHeader>
-                            <CardContent className="h-64">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={chartData}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} unit=" বছর" />
-                                        <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
-                                        <Tooltip formatter={(value) => [formatCurrency(Number(value)), ""]} />
-                                        <Area type="monotone" dataKey="বিনিয়োগ" stackId="1" name="মোট বিনিয়োগ" stroke="#8884d8" fill="#8884d8" fillOpacity={0.2} />
-                                        <Area type="monotone" dataKey="মোট মূল্য" stackId="1" name="মোট রিটার্ন" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </CardContent>
-                        </Card>
-                    )}
-                </div>
+                )}
             </div>
         </div>
      );
@@ -460,4 +491,3 @@ export default function InvestmentReturnCalculator() {
         </Tabs>
     );
 }
-
