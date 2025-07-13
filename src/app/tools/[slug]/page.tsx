@@ -298,3 +298,5 @@ export default async function ToolPage({ params }: ToolPageProps) {
         </div>
       )}
     </div>
+  );
+}
