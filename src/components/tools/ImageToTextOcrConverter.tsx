@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Upload, Copy, X, Loader, Wand2, Image as ImageIcon } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from '@/components/ui/progress';
-import { createWorker } from 'tesseract.js';
+import { createWorker, type Worker } from 'tesseract.js';
 import { Card } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,26 @@ export default function ImageToTextOcrConverter() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [language, setLanguage] = useState('ben+eng'); // Default to Bengali + English
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const workerRef = useRef<Worker | null>(null);
   const { toast } = useToast();
+
+  const initializeWorker = useCallback(async () => {
+    if (workerRef.current) {
+        await workerRef.current.terminate();
+        workerRef.current = null;
+    }
+    const worker = await createWorker({
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          setProgress(Math.round(m.progress * 100));
+          setStatus(`লেখা শনাক্ত করা হচ্ছে... (${Math.round(m.progress * 100)}%)`);
+        } else {
+            setStatus(m.status);
+        }
+      },
+    });
+    workerRef.current = worker;
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -57,7 +76,7 @@ export default function ImageToTextOcrConverter() {
     setStatus('ছবি প্রস্তুত। রূপান্তর করতে বাটনে ক্লিক করুন।');
   };
 
-  const handleConvert = useCallback(async () => {
+  const handleConvert = async () => {
     if (!selectedFile) {
         toast({
             title: "কোনো ছবি নেই",
@@ -71,28 +90,19 @@ export default function ImageToTextOcrConverter() {
     setText('');
     setProgress(0);
     
-    const worker = await createWorker();
-    
     try {
+      await initializeWorker();
+      const worker = workerRef.current;
+      if (!worker) throw new Error("Worker not initialized");
+
       await worker.loadLanguage(language);
       await worker.initialize(language);
-      setStatus('লেখা শনাক্ত করা হচ্ছে...');
-      const { data: { text: extractedText } } = await worker.recognize(selectedFile, {}, {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            setStatus('লেখা শনাক্ত করা হচ্ছে...');
-            setProgress(Math.round(m.progress * 100));
-          } else {
-            setStatus(m.status);
-          }
-        }
-      });
+      const { data: { text: extractedText } } = await worker.recognize(selectedFile);
       setText(extractedText);
       toast({
         title: "সফল!",
         description: "ছবি থেকে সফলভাবে লেখা বের করা হয়েছে।",
       });
-      await worker.terminate();
     } catch (error) {
       console.error(error);
       toast({
@@ -104,8 +114,12 @@ export default function ImageToTextOcrConverter() {
       setIsLoading(false);
       setProgress(100);
       setStatus('প্রক্রিয়া সম্পন্ন হয়েছে।');
+      if (workerRef.current) {
+          await workerRef.current.terminate();
+          workerRef.current = null;
+      }
     }
-  }, [language, selectedFile, toast]);
+  };
 
   const copyToClipboard = () => {
     if(!text) return;
