@@ -21,6 +21,7 @@ export default function ImageToTextOcrConverter() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [language, setLanguage] = useState('ben+eng'); // Default to Bengali + English
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const workerRef = useRef<Tesseract.Worker | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,18 +72,18 @@ export default function ImageToTextOcrConverter() {
     setText('');
     setProgress(0);
     
-    const worker = await createWorker({
-        logger: m => {
-            if (m.status === 'recognizing text') {
-                setStatus('লেখা শনাক্ত করা হচ্ছে...');
-                setProgress(Math.round(m.progress * 100));
-            } else {
-                setStatus(m.status);
-            }
-        },
-    });
-
     try {
+      const worker = await createWorker({
+        logger: m => {
+          if (m.status === 'recognizing text') {
+              setStatus('লেখা শনাক্ত করা হচ্ছে...');
+              setProgress(Math.round(m.progress * 100));
+          } else {
+              setStatus(m.status);
+          }
+        },
+      });
+
       await worker.loadLanguage(language);
       await worker.initialize(language);
       setStatus('লেখা শনাক্ত করা হচ্ছে...');
