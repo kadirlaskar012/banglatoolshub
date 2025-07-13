@@ -7,6 +7,7 @@ import Breadcrumbs from '@/components/Breadcrumbs';
 import { Calendar, User, Wrench } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Tool } from '@/lib/types';
 
 type BlogPostPageProps = {
   params: {
@@ -15,14 +16,14 @@ type BlogPostPageProps = {
 };
 
 export async function generateStaticParams() {
-  const posts = getBlogPosts();
+  const posts = await getBlogPosts();
   return posts.map((post) => ({
     slug: post.slug,
   }));
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const post = getBlogPostBySlug(params.slug);
+  const post = await getBlogPostBySlug(params.slug);
 
   if (!post) {
     return {};
@@ -34,14 +35,21 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
   };
 }
 
-export default function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = getBlogPostBySlug(params.slug);
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const post = await getBlogPostBySlug(params.slug);
 
   if (!post) {
     notFound();
   }
 
-  const relatedTools = post.relatedTools?.map(slug => getToolBySlug(slug)).filter(Boolean) || [];
+  const relatedTools: (Tool | null)[] = [];
+  if(post.relatedTools) {
+    for (const slug of post.relatedTools) {
+      const tool = await getToolBySlug(slug);
+      relatedTools.push(tool);
+    }
+  }
+  const validRelatedTools = relatedTools.filter(Boolean) as Tool[];
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -85,7 +93,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
         </div>
       </article>
 
-      {relatedTools.length > 0 && (
+      {validRelatedTools.length > 0 && (
           <aside className="mt-12">
             <Card className="bg-secondary/50">
                 <CardHeader>
@@ -96,7 +104,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
                 </CardHeader>
                 <CardContent>
                     <ul className="space-y-2">
-                        {relatedTools.map(tool => tool && (
+                        {validRelatedTools.map(tool => tool && (
                             <li key={tool.id}>
                                 <Link href={`/tools/${tool.slug}`} className="font-semibold text-primary hover:underline">
                                     {tool.name}

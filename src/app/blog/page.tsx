@@ -6,8 +6,8 @@ export const metadata = {
   description: 'Articles, tutorials, and updates from the Bangla Tools HUB team.',
 };
 
-export default function BlogPage() {
-  const posts = getBlogPosts();
+export default async function BlogPage() {
+  const posts = await getBlogPosts();
 
   return (
     <div className="space-y-8">

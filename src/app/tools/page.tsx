@@ -6,8 +6,8 @@ export const metadata = {
   description: 'Browse our collection of essential tools for Bangla.',
 };
 
-export default function ToolsPage() {
-  const tools = getTools();
+export default async function ToolsPage() {
+  const tools = await getTools();
 
   return (
     <div className="space-y-8">

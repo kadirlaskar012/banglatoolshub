@@ -6,9 +6,12 @@ import ToolCard from '@/components/ToolCard';
 import PostCard from '@/components/PostCard';
 import { ArrowRight } from 'lucide-react';
 
-export default function Home() {
-  const featuredTools = getTools().slice(0, 3);
-  const latestPosts = getBlogPosts().slice(0, 2);
+export default async function Home() {
+  const allTools = await getTools();
+  const allPosts = await getBlogPosts();
+  
+  const featuredTools = allTools.slice(0, 3);
+  const latestPosts = allPosts.slice(0, 2);
 
   return (
     <div className="space-y-16 sm:space-y-24">

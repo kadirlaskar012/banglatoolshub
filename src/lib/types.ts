@@ -1,4 +1,5 @@
 import type { LucideProps } from 'lucide-react';
+import type { Icons } from '@/components/icons';
 
 export interface Tool {
   id: string;
@@ -6,19 +7,19 @@ export interface Tool {
   name: string;
   description: string;
   longDescription: string;
-  icon: React.ComponentType<LucideProps>;
+  icon: keyof typeof Icons;
   category: string;
   content: string; // The primary content of the tool page, used for AI suggestions
 }
 
 export interface BlogPost {
-  id: string;
+  id:string;
   slug: string;
   title: string;
   excerpt: string;
   content: string;
   author: string;
-  publishedAt: string;
+  publishedAt: string; // Should be in ISO format
   imageUrl: string;
   relatedTools?: string[]; // array of tool slugs
 }

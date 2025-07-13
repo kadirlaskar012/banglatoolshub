@@ -7,13 +7,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { getToolBySlug } from '@/lib/data';
+import type { Tool } from '@/lib/types';
 
 interface AiToolSuggesterProps {
   content: string;
 }
 
 export default function AiToolSuggester({ content }: AiToolSuggesterProps) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<Tool[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -21,12 +22,16 @@ export default function AiToolSuggester({ content }: AiToolSuggesterProps) {
       setIsLoading(true);
       try {
         const result = await getToolSuggestions(content);
-        // The AI can return slugs, so we find the tool name from the slug.
-        const suggestionNames = result.map(slugOrName => {
-            const tool = getToolBySlug(slugOrName);
-            return tool ? tool.name : slugOrName; // Fallback to whatever AI returned
-        }).slice(0, 3); // Limit to 3 suggestions
-        setSuggestions(suggestionNames);
+        
+        const suggestedTools: Tool[] = [];
+        for (const slugOrName of result) {
+            const tool = await getToolBySlug(slugOrName);
+            if (tool) {
+                suggestedTools.push(tool);
+            }
+        }
+        setSuggestions(suggestedTools.slice(0, 3)); // Limit to 3 suggestions
+
       } catch (error) {
         console.error('Failed to fetch AI suggestions:', error);
       } finally {
@@ -54,8 +59,12 @@ export default function AiToolSuggester({ content }: AiToolSuggesterProps) {
           </div>
         ) : suggestions.length > 0 ? (
           <ul className="space-y-2 list-disc list-inside">
-            {suggestions.map((name, index) => (
-              <li key={index}>{name}</li>
+            {suggestions.map((tool, index) => (
+              <li key={index}>
+                <Link href={`/tools/${tool.slug}`} className="font-medium text-primary hover:underline">
+                    {tool.name}
+                </Link>
+              </li>
             ))}
           </ul>
         ) : (

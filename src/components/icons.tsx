@@ -31,3 +31,10 @@ export const Icons = {
   image: LucideImage,
   chevronRight: ChevronRight,
 };
+
+export const iconMap = {
+  pen: Icons.pen,
+  calculator: Icons.calculator,
+  type: Icons.type,
+  image: Icons.image,
+};

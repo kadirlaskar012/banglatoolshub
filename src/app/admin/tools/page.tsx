@@ -4,8 +4,8 @@ import { PlusCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getTools } from '@/lib/data';
 
-export default function AdminToolsPage() {
-  const tools = getTools();
+export default async function AdminToolsPage() {
+  const tools = await getTools();
 
   return (
     <div className="space-y-6">

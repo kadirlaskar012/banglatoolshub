@@ -5,8 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getBlogPosts } from '@/lib/data';
 import { format, parseISO } from 'date-fns';
 
-export default function AdminBlogPage() {
-    const posts = getBlogPosts();
+export default async function AdminBlogPage() {
+    const posts = await getBlogPosts();
 
     return (
         <div className="space-y-6">
