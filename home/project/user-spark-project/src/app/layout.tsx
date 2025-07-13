@@ -77,7 +77,7 @@ export default async function RootLayout({
       >
         <div className="flex min-h-screen flex-col">
           <Header menuData={menuData} />
-          <main className="container flex-grow px-6 py-8 md:py-12">{children}</main>
+          <main className="container flex-grow px-6 lg:px-8 py-8 md:py-12">{children}</main>
           <Footer />
         </div>
         <Toaster />
