@@ -83,7 +83,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
             </Card>
         </div>
         <div className="lg:col-span-1">
-          <AiToolSuggester content={tool.content} />
+          <AiToolSuggester content={tool.contentHtml} />
         </div>
       </div>
     </div>

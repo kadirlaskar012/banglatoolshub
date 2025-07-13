@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lightbulb } from 'lucide-react';
 import Link from 'next/link';
-import { getToolBySlug } from '@/lib/data';
 import type { Tool } from '@/lib/types';
 
 interface AiToolSuggesterProps {
@@ -22,18 +21,10 @@ export default function AiToolSuggester({ content }: AiToolSuggesterProps) {
       setIsLoading(true);
       try {
         const result = await getToolSuggestions(content);
-        
-        const suggestedTools: Tool[] = [];
-        for (const slugOrName of result) {
-            const tool = await getToolBySlug(slugOrName);
-            if (tool) {
-                suggestedTools.push(tool);
-            }
-        }
-        setSuggestions(suggestedTools.slice(0, 3)); // Limit to 3 suggestions
-
+        setSuggestions(result); 
       } catch (error) {
         console.error('Failed to fetch AI suggestions:', error);
+        setSuggestions([]); // Set to empty array on error
       } finally {
         setIsLoading(false);
       }

@@ -7,3 +7,4 @@ icon: "pen"
 metaTitle: "Sample Tool | Bangla Tools HUB"
 metaDescription: "Explore the sample tool and see how our file-based content management works."
 ---
+This is some content inside the sample tool markdown file. The AI can use this text to suggest other relevant tools.

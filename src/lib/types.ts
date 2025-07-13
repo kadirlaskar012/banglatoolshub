@@ -9,6 +9,7 @@ export interface Tool {
   longDescription: string;
   icon: keyof typeof Icons;
   category: string;
+  contentHtml: string;
   metaTitle?: string;
   metaDescription?: string;
 }

@@ -4,7 +4,6 @@ import matter from 'gray-matter';
 import { remark } from 'remark';
 import html from 'remark-html';
 import type { Tool, BlogPost } from './types';
-import { Icons, iconMap } from '@/components/icons';
 
 const toolsDirectory = path.join(process.cwd(), 'src/content/tools');
 const blogDirectory = path.join(process.cwd(), 'src/content/blog');
@@ -33,12 +32,13 @@ export async function getTools(): Promise<Tool[]> {
     const allToolsData = await Promise.all(fileNames.map(async (fileName) => {
         const slug = fileName.replace(/\.md$/, '');
         const fullPath = path.join(toolsDirectory, fileName);
-        const data = await parseMarkdownFile(fullPath) as Omit<Tool, 'slug' | 'id'>;
+        const fileContents = fs.readFileSync(fullPath, 'utf8');
+        const matterResult = matter(fileContents);
 
         return {
             id: slug,
             slug,
-            ...data,
+            ...matterResult.data,
         } as Tool;
     }));
     return allToolsData;
@@ -49,11 +49,12 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
     if (!fs.existsSync(fullPath)) {
         return null;
     }
-    const data = await parseMarkdownFile(fullPath) as Omit<Tool, 'slug' | 'id'>;
+    const { contentHtml, ...data } = await parseMarkdownFile(fullPath);
     return {
         id: slug,
         slug,
-        ...data,
+        contentHtml,
+        ...(data as Omit<Tool, 'id'|'slug'|'contentHtml'>)
     };
 }
 
@@ -84,7 +85,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
     });
 }
 
-export async function getBlogPostBySlug(slug: string): Promise<BlogPost & { contentHtml: string } | null> {
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
     const fullPath = path.join(blogDirectory, `${slug}.md`);
      if (!fs.existsSync(fullPath)) {
         return null;
@@ -95,6 +96,6 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost & { cont
         id: slug,
         slug,
         contentHtml,
-        ...(data as Omit<BlogPost, 'id'|'slug'>)
+        ...(data as Omit<BlogPost, 'id'|'slug'|'contentHtml'>)
     };
 }
