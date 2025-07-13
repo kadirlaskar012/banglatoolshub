@@ -71,7 +71,7 @@ export default function GstVatCalculator() {
   }, [parsedAmount, currentRate, mode]);
 
   const formatCurrency = (value: number) => {
-    return `৳ ${value.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `${value.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} টাকা`;
   };
 
   return (
