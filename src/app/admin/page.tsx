@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { DevDataTransfer } from '@/components/admin/DevDataTransfer';
 
 export default function AdminDashboard() {
   return (
@@ -37,6 +38,21 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+      
+      {/* Developer Only Section */}
+      {process.env.NODE_ENV === 'development' && (
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="font-headline text-destructive">Developer Zone</CardTitle>
+            <CardDescription>
+              Use this section to transfer pre-defined data from the chat session into Firestore. This is only visible in development mode.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DevDataTransfer />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

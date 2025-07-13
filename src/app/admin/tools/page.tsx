@@ -1,9 +1,49 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Edit, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getTools } from '@/lib/data';
 import Link from 'next/link';
+import { deleteTool } from '@/lib/actions';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
+function DeleteButton({ toolId }: { toolId: string }) {
+  const deleteToolWithId = deleteTool.bind(null, toolId);
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+            <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the tool.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <form action={deleteToolWithId}>
+            <AlertDialogAction type="submit">Continue</AlertDialogAction>
+          </form>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export default async function AdminToolsPage() {
   const tools = await getTools();
@@ -39,8 +79,12 @@ export default async function AdminToolsPage() {
                     <TableCell className="font-medium">{tool.name}</TableCell>
                     <TableCell>{tool.category}</TableCell>
                     <TableCell className="text-right">
-                      {/* Edit/Delete buttons will be added later */}
-                      <Button variant="ghost" size="sm">Edit</Button>
+                       <Button asChild variant="ghost" size="icon">
+                            <Link href={`/admin/tools/edit/${tool.id}`}>
+                                <Edit className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                        <DeleteButton toolId={tool.id} />
                     </TableCell>
                   </TableRow>
                 ))}

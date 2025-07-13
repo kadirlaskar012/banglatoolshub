@@ -3,19 +3,16 @@ import { db } from './firebase';
 import { collection, getDocs, getDoc, doc, query, where } from 'firebase/firestore';
 import { Icons } from '@/components/icons';
 
-const iconMap: { [key: string]: React.ComponentType<any> } = Icons;
-
-
 // Helper function to map Firestore document data to our types
-function mapDocToTool(doc: any): Tool {
-    const data = doc.data();
+function mapDocToTool(docSnapshot: any): Tool {
+    const data = docSnapshot.data();
     return {
-        id: doc.id,
+        id: docSnapshot.id,
         slug: data.slug,
         name: data.name,
         description: data.description,
         longDescription: data.longDescription,
-        icon: data.icon as keyof typeof Icons,
+        icon: data.icon as keyof typeof Icons || 'pen',
         category: data.category,
         content: data.content,
         metaTitle: data.metaTitle,
@@ -23,10 +20,10 @@ function mapDocToTool(doc: any): Tool {
     };
 }
 
-function mapDocToBlogPost(doc: any): BlogPost {
-    const data = doc.data();
+function mapDocToBlogPost(docSnapshot: any): BlogPost {
+    const data = docSnapshot.data();
     return {
-        id: doc.id,
+        id: docSnapshot.id,
         slug: data.slug,
         title: data.title,
         excerpt: data.excerpt,
@@ -65,6 +62,20 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
         return null;
     }
 };
+
+export const getToolById = async (id: string): Promise<Tool | null> => {
+    try {
+        const toolDoc = await getDoc(doc(db, "tools", id));
+        if (!toolDoc.exists()) {
+            return null;
+        }
+        return mapDocToTool(toolDoc);
+    } catch (error) {
+        console.error("Error fetching tool by id:", error);
+        return null;
+    }
+};
+
 
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
     try {
