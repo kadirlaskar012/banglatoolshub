@@ -49,14 +49,14 @@ export default function Header({ menuData }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-card">
       <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center space-x-2">
-          <Icons.logo className="h-6 w-6 text-primary" />
-          <span className="hidden font-bold sm:inline-block font-headline">
-            বাংলা টুলস হাব
-          </span>
-        </Link>
+        <div className="flex flex-1 items-center justify-between">
+          <Link href="/" className="mr-6 flex items-center space-x-2">
+            <Icons.logo className="h-6 w-6 text-primary" />
+            <span className="hidden font-bold sm:inline-block font-headline">
+              বাংলা টুলস হাব
+            </span>
+          </Link>
 
-        <div className="flex flex-1 items-center justify-end">
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             <NavLinks />

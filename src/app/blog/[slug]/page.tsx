@@ -174,7 +174,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const headings = getHeadings(post.contentHtml);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-8">
       <BlogSchemaMarkup post={post} />
       <Breadcrumbs
         items={[
@@ -183,7 +183,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           { label: post.title },
         ]}
       />
-      <article className="mt-6">
+      <article>
         <h1 className="text-4xl lg:text-5xl font-bold font-headline leading-tight">
           {post.title}
         </h1>
@@ -212,9 +212,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             data-ai-hint="technology abstract"
             />
         )}
-
+        </article>
+        
         {headings.length > 0 && (
-          <Card className="my-8 bg-muted/50">
+          <Card className="bg-muted/50">
             <Accordion type="single" collapsible defaultValue="toc">
               <AccordionItem value="toc" className="border-b-0">
                 <AccordionTrigger className="px-6 py-4 text-lg font-headline hover:no-underline">
@@ -239,16 +240,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </Card>
         )}
 
-        <div 
-            className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
-            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
-        />
-
-      </article>
+        <Card>
+          <CardContent className="p-6">
+            <div 
+                className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
+                dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+            />
+          </CardContent>
+        </Card>
 
       {post.faq && post.faq.length > 0 && (
-        <>
-          <Separator className='my-12' />
           <section>
               <Card>
                   <CardHeader>
@@ -271,12 +272,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   </CardContent>
               </Card>
           </section>
-        </>
       )}
 
       {validRelatedTools.length > 0 && (
-        <>
-          <Separator className='my-12' />
           <aside>
             <Card className="bg-secondary/50">
                 <CardHeader>
@@ -299,7 +297,6 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </CardContent>
             </Card>
           </aside>
-        </>
       )}
 
       {/* 
