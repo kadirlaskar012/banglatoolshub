@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -45,6 +45,10 @@ export default function AgeCalculator() {
   const [month, setMonth] = useState('');
   const [year, setYear] = useState('');
 
+  const dayRef = useRef<HTMLInputElement>(null);
+  const monthRef = useRef<HTMLInputElement>(null);
+  const yearRef = useRef<HTMLInputElement>(null);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -69,9 +73,22 @@ export default function AgeCalculator() {
 
   const handleManualInputChange = (type: 'day' | 'month' | 'year', value: string) => {
     const numValue = value.replace(/[^0-9]/g, '');
-    if (type === 'day') setDay(numValue);
-    if (type === 'month') setMonth(numValue);
-    if (type === 'year') setYear(numValue);
+    
+    if (type === 'day') {
+      setDay(numValue);
+      if (numValue.length === 2) {
+        monthRef.current?.focus();
+      }
+    }
+    if (type === 'month') {
+      setMonth(numValue);
+      if (numValue.length === 2) {
+        yearRef.current?.focus();
+      }
+    }
+    if (type === 'year') {
+      setYear(numValue);
+    }
   };
 
   useEffect(() => {
@@ -205,15 +222,15 @@ export default function AgeCalculator() {
              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <Label htmlFor="day" className="text-xs">দিন</Label>
-                  <Input id="day" placeholder="DD" value={day} onChange={(e) => handleManualInputChange('day', e.target.value)} maxLength={2} />
+                  <Input ref={dayRef} id="day" placeholder="DD" value={day} onChange={(e) => handleManualInputChange('day', e.target.value)} maxLength={2} />
                 </div>
                 <div>
                   <Label htmlFor="month" className="text-xs">মাস</Label>
-                  <Input id="month" placeholder="MM" value={month} onChange={(e) => handleManualInputChange('month', e.target.value)} maxLength={2} />
+                  <Input ref={monthRef} id="month" placeholder="MM" value={month} onChange={(e) => handleManualInputChange('month', e.target.value)} maxLength={2} />
                 </div>
                 <div>
                   <Label htmlFor="year" className="text-xs">বছর</Label>
-                  <Input id="year" placeholder="YYYY" value={year} onChange={(e) => handleManualInputChange('year', e.target.value)} maxLength={4} />
+                  <Input ref={yearRef} id="year" placeholder="YYYY" value={year} onChange={(e) => handleManualInputChange('year', e.target.value)} maxLength={4} />
                 </div>
               </div>
           </TabsContent>
@@ -340,5 +357,3 @@ export default function AgeCalculator() {
     </div>
   );
 }
-
-    
