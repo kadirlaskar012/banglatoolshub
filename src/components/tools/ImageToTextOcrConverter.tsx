@@ -1,42 +1,98 @@
+
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Copy } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast"
+import { Upload, Copy, X, Loader, Languages, FileText, Image as ImageIcon } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { Progress } from '@/components/ui/progress';
+import { createWorker } from 'tesseract.js';
+import { Card } from '../ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ImageToTextOcrConverter() {
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [status, setStatus] = useState('ছবি নির্বাচন করুন...');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [language, setLanguage] = useState('ben+eng'); // Default to Bengali + English
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-        handleConvert(file);
-      };
-      reader.readAsDataURL(file);
+      processFile(file);
     }
   };
-
-  const handleConvert = (file: File) => {
-    setIsLoading(true);
-    setText('');
-    
-    // Placeholder for actual API call
-    setTimeout(() => {
-      setText("এটি একটি নমুনা টেক্সট। আপনার আপলোড করা ছবি থেকে লেখা বের করে এখানে দেখানো হবে।");
-      setIsLoading(false);
-    }, 3000);
+  
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const file = event.dataTransfer.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+        processFile(file);
+    } else {
+        toast({
+            title: "ভুল ফাইল",
+            description: "দয়া করে একটি ইমেজ ফাইল (JPG, PNG) আপলোড করুন।",
+            variant: "destructive"
+        });
+    }
+  };
+  
+  const processFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+      handleConvert(file);
+    };
+    reader.readAsDataURL(file);
   };
 
+  const handleConvert = useCallback(async (file: File) => {
+    setIsLoading(true);
+    setText('');
+    setProgress(0);
+
+    const worker = await createWorker({
+      logger: m => {
+        if (m.status === 'recognizing text') {
+          setStatus('লেখা শনাক্ত করা হচ্ছে...');
+          setProgress(Math.round(m.progress * 100));
+        } else {
+            setStatus(m.status);
+        }
+      },
+    });
+
+    try {
+        await worker.loadLanguage(language);
+        await worker.initialize(language);
+        const { data: { text: extractedText } } = await worker.recognize(file);
+        setText(extractedText);
+        toast({
+            title: "সফল!",
+            description: "ছবি থেকে সফলভাবে লেখা বের করা হয়েছে।",
+        });
+        await worker.terminate();
+    } catch (error) {
+        console.error(error);
+        toast({
+            title: "একটি সমস্যা হয়েছে",
+            description: "লেখা শনাক্ত করার সময় একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+            variant: "destructive",
+        });
+    } finally {
+        setIsLoading(false);
+        setProgress(100);
+    }
+  }, [language]);
+
   const copyToClipboard = () => {
+    if(!text) return;
     navigator.clipboard.writeText(text);
     toast({
         title: "কপি হয়েছে!",
@@ -44,44 +100,94 @@ export default function ImageToTextOcrConverter() {
     })
   };
 
+  const clearAll = () => {
+    setText('');
+    setImagePreview(null);
+    setProgress(0);
+    setStatus('ছবি নির্বাচন করুন...');
+    if(fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg">
-        <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-            accept="image/png, image/jpeg, image/webp"
-            disabled={isLoading}
-        />
-        {imagePreview ? (
-            <img src={imagePreview} alt="Image preview" className="max-h-64 rounded-lg object-contain"/>
-        ) : (
-            <div className="text-center">
-                <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-2 text-sm font-medium">ছবি আপলোড করুন</h3>
-                <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, WEBP</p>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="space-y-4">
+        <Card 
+            className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg h-80"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
+        >
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="hidden"
+                accept="image/png, image/jpeg"
+                disabled={isLoading}
+            />
+            {imagePreview ? (
+                <img src={imagePreview} alt="Image preview" className="max-h-full rounded-lg object-contain"/>
+            ) : (
+                <div className="text-center text-muted-foreground">
+                    <Upload className="mx-auto h-12 w-12" />
+                    <h3 className="mt-2 font-medium">ছবি এখানে টেনে আনুন বা ক্লিক করে বাছুন</h3>
+                    <p className="mt-1 text-xs">PNG, JPG, JPEG</p>
+                </div>
+            )}
+        </Card>
+        <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+                <label className="text-sm font-medium mb-2 block">লেখার ভাষা</label>
+                <Select value={language} onValueChange={setLanguage} disabled={isLoading}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="ভাষা নির্বাচন করুন" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="ben+eng">বাংলা ও ইংরেজি</SelectItem>
+                        <SelectItem value="ben">শুধু বাংলা</SelectItem>
+                        <SelectItem value="eng">শুধু ইংরেজি</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
-        )}
-        <Button onClick={() => fileInputRef.current?.click()} className="mt-4" disabled={isLoading}>
-            {isLoading ? "প্রসেসিং..." : (imagePreview ? "অন্য ছবি বাছুন" : "ছবি বাছুন")}
-        </Button>
+            <div className="flex-1 flex items-end">
+                <Button onClick={() => fileInputRef.current?.click()} className="w-full" disabled={isLoading}>
+                    <ImageIcon className="mr-2 h-4 w-4" />
+                    {imagePreview ? "অন্য ছবি বাছুন" : "ছবি বাছুন"}
+                </Button>
+            </div>
+        </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-4">
         <div className="flex justify-between items-center">
-            <label className="font-medium">শনাক্ত করা টেক্সট</label>
-            <Button variant="ghost" size="sm" onClick={copyToClipboard} disabled={!text}>
-                <Copy className="h-4 w-4 mr-2"/>
-                কপি
-            </Button>
+            <label className="font-medium flex items-center gap-2">
+                <FileText className="w-5 h-5"/>
+                শনাক্ত করা টেক্সট
+            </label>
+            <div className="flex gap-2">
+                <Button variant="ghost" size="icon" onClick={copyToClipboard} disabled={!text || isLoading}>
+                    <Copy className="h-4 w-4"/>
+                </Button>
+                <Button variant="ghost" size="icon" onClick={clearAll} disabled={isLoading}>
+                    <X className="h-4 w-4"/>
+                </Button>
+            </div>
         </div>
         <Textarea
-          placeholder={isLoading ? "ছবি থেকে লেখা বের করা হচ্ছে..." : "এখানে আপনার ছবির লেখাটি আসবে..."}
+          placeholder={!isLoading ? "এখানে আপনার ছবির লেখাটি আসবে..." : ""}
           value={text}
           readOnly
-          className="min-h-[300px] bg-secondary/30"
+          className="min-h-[300px] bg-muted/30 text-base"
         />
+        {isLoading && (
+            <div className="w-full space-y-2">
+                <div className="flex items-center gap-2 text-sm text-primary">
+                    <Loader className="animate-spin w-4 h-4"/>
+                    <p className="text-center font-medium capitalize">{status}</p>
+                </div>
+                <Progress value={progress} />
+            </div>
+        )}
       </div>
     </div>
   );
