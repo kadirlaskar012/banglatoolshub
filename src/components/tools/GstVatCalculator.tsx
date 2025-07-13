@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Copy, PlusCircle, Trash2, IndianRupee, Percent, Hash } from 'lucide-react';
+import { Copy, PlusCircle, Trash2, IndianRupee, Percent, Hash, Share2, History, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -34,6 +34,7 @@ interface HistoryItem {
     mode: 'add' | 'remove';
     transactionType: 'intra' | 'inter';
     timestamp: string;
+    totalPrice: number;
 }
 
 const getInitialItems = (): CalculationItem[] => [{ id: 1, amount: 1000, rate: '18' }];
@@ -56,23 +57,31 @@ export default function GstVatCalculator() {
         }
     }, []);
 
-    const saveToHistory = useCallback(() => {
+    const saveHistoryToLocalStorage = (updatedHistory: HistoryItem[]) => {
+        try {
+            localStorage.setItem('gstHistory', JSON.stringify(updatedHistory));
+        } catch (error) {
+            console.error("Failed to save history to localStorage", error);
+        }
+    };
+    
+    const saveToHistory = useCallback((calcResult: any) => {
         const newHistoryItem: HistoryItem = {
             id: new Date().toISOString(),
             items,
             mode,
             transactionType,
             timestamp: new Date().toLocaleString('bn-BD'),
+            totalPrice: calcResult.finalPrice,
         };
         
-        const updatedHistory = [newHistoryItem, ...history].slice(0, 5);
-        setHistory(updatedHistory);
-        try {
-            localStorage.setItem('gstHistory', JSON.stringify(updatedHistory));
-        } catch (error) {
-            console.error("Failed to save history to localStorage", error);
-        }
-    }, [items, mode, transactionType, history]);
+        setHistory(prevHistory => {
+            const updatedHistory = [newHistoryItem, ...prevHistory].slice(0, 5);
+            saveHistoryToLocalStorage(updatedHistory);
+            return updatedHistory;
+        });
+    }, [items, mode, transactionType]);
+
 
     const handleItemChange = (id: number, field: 'amount' | 'rate', value: string) => {
         setItems(prevItems =>
@@ -134,34 +143,51 @@ export default function GstVatCalculator() {
     useEffect(() => {
         const handler = setTimeout(() => {
             if (totalCalculation.finalPrice > 0) {
-              saveToHistory();
+              saveToHistory(totalCalculation);
             }
-        }, 1500); // Debounce saving to history
+        }, 2000);
         return () => clearTimeout(handler);
-    }, [items, mode, transactionType]); // Deliberately not including saveToHistory
+    }, [items, mode, transactionType, saveToHistory, totalCalculation]);
 
     const formatCurrency = (value: number) => `${value.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} টাকা`;
     
-    const copyResultToClipboard = () => {
+    const handleShare = async () => {
         const { totalTaxableValue, totalTaxAmount, finalPrice, cgst, sgst, igst } = totalCalculation;
-        let resultText = `
-হিসাবের ফলাফল:
+        const resultText = `
+জিএসটি হিসাবের ফলাফল:
 ---------------------
 আসল মূল্য: ${formatCurrency(totalTaxableValue)}
 মোট কর: ${formatCurrency(totalTaxAmount)}
-`;
-        if (transactionType === 'intra') {
-            resultText += `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCurrency(sgst)}\n`;
-        } else {
-            resultText += `IGST: ${formatCurrency(igst)}\n`;
-        }
-        resultText += `---------------------\nমোট মূল্য: ${formatCurrency(finalPrice)}`;
+${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCurrency(sgst)}` : `IGST: ${formatCurrency(igst)}`}
+---------------------
+মোট মূল্য: ${formatCurrency(finalPrice)}
+        `.trim();
+        
+        const shareData = {
+            title: 'জিএসটি হিসাব',
+            text: resultText,
+            url: window.location.href
+        };
 
-        navigator.clipboard.writeText(resultText.trim());
-        toast({
-            title: "কপি হয়েছে!",
-            description: "হিসাবের ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
-        });
+        if (navigator.share) {
+            try {
+                await navigator.share(shareData);
+            } catch (err) {
+                 // Fallback to clipboard if share fails
+                navigator.clipboard.writeText(resultText);
+                toast({
+                    title: "কপি হয়েছে!",
+                    description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
+                });
+            }
+        } else {
+            // Fallback for browsers that don't support Web Share API
+            navigator.clipboard.writeText(resultText);
+            toast({
+                title: "কপি হয়েছে!",
+                description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
+            });
+        }
     };
     
     const loadFromHistory = (historyItem: HistoryItem) => {
@@ -169,6 +195,21 @@ export default function GstVatCalculator() {
         setMode(historyItem.mode);
         setTransactionType(historyItem.transactionType);
         toast({ title: "ইতিহাস লোড হয়েছে" });
+    };
+
+    const deleteHistoryItem = (id: string) => {
+        setHistory(prevHistory => {
+            const updatedHistory = prevHistory.filter(item => item.id !== id);
+            saveHistoryToLocalStorage(updatedHistory);
+            return updatedHistory;
+        });
+        toast({ title: "হিস্টোরি আইটেম মুছে ফেলা হয়েছে" });
+    };
+
+    const clearHistory = () => {
+        setHistory([]);
+        saveHistoryToLocalStorage([]);
+        toast({ title: "সম্পূর্ণ হিস্টোরি মুছে ফেলা হয়েছে" });
     };
 
     return (
@@ -265,8 +306,8 @@ export default function GstVatCalculator() {
                                         <CardTitle className="text-xl font-headline">হিসাবের ফলাফল</CardTitle>
                                         <CardDescription>আপনার দেওয়া তথ্যের ভিত্তিতে ফলাফল।</CardDescription>
                                     </div>
-                                    <Button variant="ghost" size="icon" onClick={copyResultToClipboard}>
-                                        <Copy className="w-5 h-5"/>
+                                    <Button variant="ghost" size="icon" onClick={handleShare}>
+                                        <Share2 className="w-5 h-5"/>
                                     </Button>
                                 </div>
                             </CardHeader>
@@ -303,22 +344,37 @@ export default function GstVatCalculator() {
                         {history.length > 0 && (
                             <Accordion type="single" collapsible>
                                 <AccordionItem value="history">
-                                    <AccordionTrigger className="text-lg font-headline">হিসাবের ইতিহাস (History)</AccordionTrigger>
+                                    <AccordionTrigger className="text-lg font-headline flex items-center gap-2">
+                                        <History className="w-5 h-5"/>
+                                        হিসাবের ইতিহাস (History)
+                                    </AccordionTrigger>
                                     <AccordionContent>
                                         <div className="space-y-2">
                                             {history.map(hist => (
-                                                <Card key={hist.id} className="p-3 cursor-pointer hover:bg-muted/50" onClick={() => loadFromHistory(hist)}>
-                                                    <div className="flex justify-between items-center">
+                                                <Card key={hist.id} className="p-3 relative group">
+                                                    <div className="flex justify-between items-center cursor-pointer" onClick={() => loadFromHistory(hist)}>
                                                         <div>
-                                                            <p className="font-semibold">{formatCurrency(hist.items.reduce((acc, curr) => acc + (parseFloat(String(curr.amount)) || 0), 0))}</p>
+                                                            <p className="font-semibold">{formatCurrency(hist.totalPrice)}</p>
                                                             <p className="text-xs text-muted-foreground">{hist.timestamp}</p>
                                                         </div>
                                                         <div className="text-sm text-muted-foreground">
                                                             {hist.items.length} আইটেম
                                                         </div>
                                                     </div>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="absolute top-1 right-1 h-7 w-7 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={(e) => { e.stopPropagation(); deleteHistoryItem(hist.id); }}
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
                                                 </Card>
                                             ))}
+                                            <Button variant="outline" size="sm" className="w-full mt-2" onClick={clearHistory}>
+                                                <Trash2 className="mr-2 h-4 w-4" />
+                                                হিস্টোরি মুছুন
+                                            </Button>
                                         </div>
                                     </AccordionContent>
                                 </AccordionItem>
