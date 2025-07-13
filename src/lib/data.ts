@@ -4,9 +4,27 @@ import matter from 'gray-matter';
 import { remark } from 'remark';
 import html from 'remark-html';
 import type { Tool, BlogPost } from './types';
+import {-transform} from 'stream';
 
 const toolsDirectory = path.join(process.cwd(), 'src/content/tools');
 const blogDirectory = path.join(process.cwd(), 'src/content/blog');
+
+// Helper function to add IDs to headings
+const addHeadingIds = () => {
+    return (tree: any) => {
+        const {visit} = require('unist-util-visit');
+        visit(tree, 'heading', (node: any) => {
+            if (node.depth === 2) { // Only add IDs to h2 tags
+                const textContent = node.children.map((child: any) => child.value || '').join('');
+                if (textContent) {
+                    node.data = node.data || {};
+                    node.data.hProperties = node.data.hProperties || {};
+                    (node.data.hProperties as any).id = textContent.toLowerCase().replace(/\s+/g, '-').replace(/[?]/g, '');
+                }
+            }
+        });
+    };
+};
 
 // Helper function to read and parse a markdown file
 async function parseMarkdownFile(fullPath: string) {
@@ -22,7 +40,8 @@ async function parseMarkdownFile(fullPath: string) {
     }
 
     const processedContent = await remark()
-        .use(html)
+        .use(addHeadingIds)
+        .use(html, { sanitize: false })
         .process(matterResult.content);
     const contentHtml = processedContent.toString();
 

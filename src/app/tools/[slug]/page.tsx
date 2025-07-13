@@ -10,7 +10,7 @@ import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { BlogPost, Tool } from '@/lib/types';
 import PostCard from '@/components/PostCard';
-import { BookText } from 'lucide-react';
+import { BookText, List } from 'lucide-react';
 
 // Dynamically import all tool components
 const ToolComponents: { [key: string]: React.ComponentType<any> } = {
@@ -39,6 +39,18 @@ type ToolPageProps = {
     slug: string;
   };
 };
+
+// Function to extract headings from HTML content
+const getHeadings = (htmlContent: string) => {
+    const headingRegex = /<h2 id="([^"]+)">(.*?)<\/h2>/g;
+    const headings = [];
+    let match;
+    while ((match = headingRegex.exec(htmlContent)) !== null) {
+        headings.push({ id: match[1], text: match[2].replace(/<[^>]*>?/gm, '') });
+    }
+    return headings;
+};
+
 
 export async function generateStaticParams() {
   const tools = await getTools();
@@ -72,6 +84,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const relatedPosts = allPosts.filter(post => 
     post.relatedTools && post.relatedTools.includes(tool.slug)
   );
+  
+  const headings = getHeadings(tool.contentHtml);
 
   const Icon = iconMap[tool.icon as keyof typeof iconMap] || null;
   const ToolComponent = ToolComponents[tool.slug] || null;
@@ -85,22 +99,24 @@ export default async function ToolPage({ params }: ToolPageProps) {
           { label: tool.name },
         ]}
       />
-      <div className="mt-6">
+      <header className="mt-6">
         <div className="flex items-center gap-4">
           {Icon && (
             <div className="p-4 rounded-lg bg-primary/10 text-primary">
               <Icon className="w-8 h-8" />
             </div>
           )}
-          <h1 className="text-4xl font-bold font-headline">{tool.name}</h1>
+          <div>
+            <h1 className="text-4xl font-bold font-headline">{tool.name}</h1>
+            <p className="mt-2 text-lg text-muted-foreground">{tool.longDescription}</p>
+          </div>
         </div>
-        <p className="mt-4 text-lg text-muted-foreground">{tool.longDescription}</p>
-      </div>
+      </header>
       
       <Separator className="my-8" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+        <main className="lg:col-span-2 space-y-8">
             <Card>
                 <CardContent className="p-6">
                     {ToolComponent ? <ToolComponent /> : (
@@ -111,15 +127,41 @@ export default async function ToolPage({ params }: ToolPageProps) {
                 </CardContent>
             </Card>
 
-            <div 
-              className="prose prose-lg max-w-none mt-12 font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
-              dangerouslySetInnerHTML={{ __html: tool.contentHtml }}
-            />
+            {headings.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 font-headline text-xl">
+                            <List className="w-5 h-5 text-primary"/>
+                            সূচিপত্র (Table of Contents)
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="space-y-2 list-decimal list-inside text-primary">
+                            {headings.map(heading => (
+                                <li key={heading.id}>
+                                    <a href={`#${heading.id}`} className="hover:underline font-medium">
+                                        {heading.text}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
 
-        </div>
-        <div className="lg:col-span-1">
+            <Card>
+              <CardContent className="p-6">
+                <div 
+                  className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
+                  dangerouslySetInnerHTML={{ __html: tool.contentHtml }}
+                />
+              </CardContent>
+            </Card>
+
+        </main>
+        <aside className="lg:col-span-1">
           <AiToolSuggester content={tool.contentHtml} />
-        </div>
+        </aside>
       </div>
 
       {relatedPosts.length > 0 && (

@@ -57,6 +57,7 @@
     "remark-html": "^16.0.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
+    "unist-util-visit": "^5.0.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -69,5 +70,3 @@
     "typescript": "^5"
   }
 }
-
-    
