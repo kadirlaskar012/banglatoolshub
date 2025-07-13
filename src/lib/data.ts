@@ -3,7 +3,7 @@ import path from 'path';
 import matter from 'gray-matter';
 import { remark } from 'remark';
 import html from 'remark-html';
-import type { Tool, BlogPost } from './types';
+import type { Tool, BlogPost, MenuTool, MenuPost } from './types';
 
 const toolsDirectory = path.join(process.cwd(), 'src/content/tools');
 const blogDirectory = path.join(process.cwd(), 'src/content/blog');
@@ -92,6 +92,14 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
     };
 }
 
+export async function getToolsForMenu(): Promise<MenuTool[]> {
+    const allTools = await getTools();
+    return allTools.map(tool => ({
+        slug: tool.slug,
+        name: tool.name,
+    }));
+}
+
 
 // --- BLOG POSTS ---
 
@@ -145,4 +153,12 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
         contentHtml,
         ...(data as Omit<BlogPost, 'id'|'slug'|'contentHtml'>)
     };
+}
+
+export async function getBlogPostsForMenu(): Promise<MenuPost[]> {
+    const allPosts = await getBlogPosts();
+    return allPosts.map(post => ({
+        slug: post.slug,
+        title: post.title,
+    }));
 }

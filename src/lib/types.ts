@@ -18,6 +18,11 @@ export interface Tool {
   }[];
 }
 
+export interface MenuTool {
+  slug: string;
+  name: string;
+}
+
 export interface BlogPost {
   id:string;
   slug: string;
@@ -34,6 +39,11 @@ export interface BlogPost {
     question: string;
     answer: string;
   }[];
+}
+
+export interface MenuPost {
+  slug: string;
+  title: string;
 }
 
 export interface NavItem {
