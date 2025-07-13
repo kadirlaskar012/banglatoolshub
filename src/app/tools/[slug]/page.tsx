@@ -113,19 +113,19 @@ const ToolSchemaMarkup = ({ tool }: { tool: Tool }) => {
             "@type": "HowToStep",
             "name": "ধাপ ১: তথ্য ইনপুট করুন",
             "text": "টুলের প্রয়োজনীয় ইনপুট ফিল্ডে আপনার ডেটা বা তথ্য লিখুন। যেমন, বয়স ক্যালকুলেটরের জন্য জন্ম তারিখ দিন।",
-            "url": `${process.env.NEXT_PUBLIC_BASE_URL}/tools/${tool.slug}#tool-interface`
+            "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/tools/${tool.slug}#tool-interface`
         },
         {
             "@type": "HowToStep",
             "name": "ধাপ ২: গণনা/রূপান্তর করুন",
             "text": "মূল বাটনে (যেমন 'গণনা করুন' বা 'রূপান্তর করুন') ক্লিক করে প্রক্রিয়া শুরু করুন।",
-            "url": `${process.env.NEXT_PUBLIC_BASE_URL}/tools/${tool.slug}#tool-interface`
+            "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/tools/${tool.slug}#tool-interface`
         },
         {
             "@type": "HowToStep",
             "name": "ধাপ ৩: ফলাফল দেখুন",
             "text": "স্ক্রিনে প্রদর্শিত ফলাফল দেখুন। প্রয়োজনে ফলাফল কপি বা শেয়ার করুন।",
-            "url": `${process.env.NEXT_PUBLIC_BASE_URL}/tools/${tool.slug}#tool-interface`
+            "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/tools/${tool.slug}#tool-interface`
         }
     ];
 
@@ -273,7 +273,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
             )}
 
         </main>
-        <aside className="lg:col-span-1">
+        <aside className="lg:col-span-1 space-y-8">
           <AiToolSuggester content={tool.contentHtml} />
         </aside>
       </div>
@@ -290,7 +290,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
               এই টুলটি সম্পর্কে আরও জানতে পড়ুন।
             </p>
           </div>
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
             {relatedPosts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
@@ -298,7 +298,3 @@ export default async function ToolPage({ params }: ToolPageProps) {
         </div>
       )}
     </div>
-  );
-}
-
-    

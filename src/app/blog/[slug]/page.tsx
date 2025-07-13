@@ -102,7 +102,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3 font-headline text-xl">
                         <Wrench className="w-5 h-5 text-primary"/>
-                        Related Tools
+                        সম্পর্কিত টুলস
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
