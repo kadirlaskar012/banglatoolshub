@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { createWorker } from 'tesseract.js';
 import { Card } from '../ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 export default function ImageToTextOcrConverter() {
   const [text, setText] = useState('');
@@ -180,10 +181,10 @@ export default function ImageToTextOcrConverter() {
       </div>
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-            <label className="font-medium flex items-center gap-2">
+            <Label className="font-medium flex items-center gap-2">
                 <FileText className="w-5 h-5"/>
                 শনাক্ত করা টেক্সট
-            </label>
+            </Label>
             <div className="flex gap-2">
                 <Button variant="ghost" size="icon" onClick={copyToClipboard} disabled={!text || isLoading}>
                     <Copy className="h-4 w-4"/>
