@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['Alegreya', 'serif'],
-        headline: ['Belleza', 'sans-serif'],
+        body: ['"Hind Siliguri"', 'sans-serif'],
+        headline: ['"Tiro Bangla"', 'serif'],
         code: ['"Source Code Pro"', 'monospace'],
       },
       colors: {

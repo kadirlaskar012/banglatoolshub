@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 import { getMenuData } from '@/lib/data';
 
 export const metadata: Metadata = {
-  title: 'Bangla Tools HUB',
-  description: 'A hub of essential tools for the modern Bangla user.',
+  title: 'বাংলা টুলস হাব',
+  description: 'আধুনিক বাংলা ব্যবহারকারীদের জন্য প্রয়োজনীয় টুলের সমাহার।',
 };
 
 export default async function RootLayout({
@@ -27,7 +27,7 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Alegreya:wght@400;700&family=Belleza&family=Source+Code+Pro:wght@400;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;700&family=Tiro+Bangla:wght@400&display=swap"
           rel="stylesheet"
         />
       </head>

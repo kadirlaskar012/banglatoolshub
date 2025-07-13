@@ -21,9 +21,9 @@ export default function Header({ menuData }: HeaderProps) {
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/', label: 'Home' },
-    { href: '/tools', label: 'Tools' },
-    { href: '/blog', label: 'Blog' },
+    { href: '/', label: 'হোম' },
+    { href: '/tools', label: 'টুলস' },
+    { href: '/blog', label: 'ব্লগ' },
   ];
 
   const NavLinks = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -52,7 +52,7 @@ export default function Header({ menuData }: HeaderProps) {
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Icons.logo className="h-6 w-6 text-primary" />
           <span className="hidden font-bold sm:inline-block font-headline">
-            Bangla Tools HUB
+            বাংলা টুলস হাব
           </span>
         </Link>
 
@@ -68,13 +68,13 @@ export default function Header({ menuData }: HeaderProps) {
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle Menu</span>
+                  <span className="sr-only">মেনু</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="pr-0">
                 <Link href="/" className="flex items-center space-x-2 mb-6 px-4">
                   <Icons.logo className="h-6 w-6 text-primary" />
-                  <span className="font-bold font-headline">Bangla Tools HUB</span>
+                  <span className="font-bold font-headline">বাংলা টুলস হাব</span>
                 </Link>
                 <nav className="flex flex-col space-y-2">
                   <NavLinks isMobile />
