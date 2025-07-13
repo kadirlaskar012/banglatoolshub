@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Terminal } from 'lucide-react';
 
 interface HighlightedSentence {
   text: string;
@@ -29,7 +32,8 @@ export default function AiPlagiarismChecker() {
   const [text, setText] = useState('');
   const [results, setResults] = useState<HighlightedSentence[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [isApiMode] = useState(false); // Toggle for future API mode
+  const [isApiMode, setIsApiMode] = useState(false);
+  const { toast } = useToast();
 
   const handleOfflineCheck = (inputText: string) => {
     if (!inputText.trim()) {
@@ -62,29 +66,47 @@ export default function AiPlagiarismChecker() {
   };
 
   const handleCheck = async () => {
+    if (isApiMode) {
+      toast({
+        title: "শীঘ্রই আসছে!",
+        description: "অনলাইন মোড বর্তমানে উপলব্ধ নয়। আমরা এটি নিয়ে কাজ করছি।",
+      });
+      return;
+    }
+
     setIsLoading(true);
     setResults([]);
 
-    if (isApiMode) {
-      // Future implementation
-      const apiResults = await checkPlagiarismWithApi(text);
-      setResults(apiResults);
-    } else {
-      // Offline check logic
+    // Offline check logic
+    setTimeout(() => { // Simulating a short delay for better UX
       handleOfflineCheck(text);
-    }
+      setIsLoading(false);
+    }, 500);
 
-    setIsLoading(false);
   };
 
   const hasDuplicates = results.some(r => r.isDuplicate);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-semibold">আপনার লেখাটি দিন</h3>
-        <Badge variant="outline">Offline Mode Active</Badge>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+        <h3 className="font-semibold text-lg">আপনার লেখাটি দিন</h3>
+        <div className="flex gap-2">
+            <Button variant={!isApiMode ? 'default' : 'outline'} onClick={() => setIsApiMode(false)}>অফলাইন মোড</Button>
+            <Button variant={isApiMode ? 'default' : 'outline'} onClick={() => setIsApiMode(true)}>অনলাইন মোড</Button>
+        </div>
       </div>
+
+       {isApiMode && (
+         <Alert>
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>অনলাইন মোড</AlertTitle>
+            <AlertDescription>
+              এই ফিচারটি শীঘ্রই আসছে। এটি আরও শক্তিশালী এবং গভীর বিশ্লেষণের জন্য একটি বহিরাগত API ব্যবহার করবে।
+            </AlertDescription>
+          </Alert>
+       )}
+
       <Textarea
         placeholder="আপনার বাংলা লেখাটি এখানে পেস্ট করুন..."
         value={text}
@@ -123,5 +145,3 @@ export default function AiPlagiarismChecker() {
     </div>
   );
 }
-
-    
