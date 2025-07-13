@@ -6,6 +6,30 @@ import AiToolSuggester from '@/components/AiToolSuggester';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { iconMap } from '@/components/icons';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Dynamically import all tool components
+const ToolComponents: { [key: string]: React.ComponentType<any> } = {
+  'ai-plagiarism-checker': dynamic(() => import('@/components/tools/AiPlagiarismChecker'), { loading: () => <ToolSkeleton /> }),
+  'legal-document-summarizer': dynamic(() => import('@/components/tools/LegalDocumentSummarizer'), { loading: () => <ToolSkeleton /> }),
+  'loan-emi-calculator': dynamic(() => import('@/components/tools/LoanEmiCalculator'), { loading: () => <ToolSkeleton /> }),
+  'keyword-research-tool': dynamic(() => import('@/components/tools/KeywordResearchTool'), { loading: () => <ToolSkeleton /> }),
+  'online-cv-resume-builder': dynamic(() => import('@/components/tools/OnlineCvResumeBuilder'), { loading: () => <ToolSkeleton /> }),
+  'investment-return-calculator': dynamic(() => import('@/components/tools/InvestmentReturnCalculator'), { loading: () => <ToolSkeleton /> }),
+  'age-calculator': dynamic(() => import('@/components/tools/AgeCalculator'), { loading: () => <ToolSkeleton /> }),
+  'image-to-text-ocr-converter': dynamic(() => import('@/components/tools/ImageToTextOcrConverter'), { loading: () => <ToolSkeleton /> }),
+  'video-to-mp3-converter': dynamic(() => import('@/components/tools/VideoToMp3Converter'), { loading: () => <ToolSkeleton /> }),
+  'gst-vat-calculator': dynamic(() => import('@/components/tools/GstVatCalculator'), { loading: () => <ToolSkeleton /> }),
+};
+
+const ToolSkeleton = () => (
+    <div className="p-8 border-2 border-dashed rounded-lg bg-muted/50 text-center text-muted-foreground">
+        <Skeleton className="h-8 w-1/2 mx-auto mb-4" />
+        <Skeleton className="h-10 w-full mb-4" />
+        <Skeleton className="h-10 w-1/4 mx-auto" />
+  </div>
+)
 
 type ToolPageProps = {
   params: {
@@ -40,14 +64,15 @@ export default async function ToolPage({ params }: ToolPageProps) {
     notFound();
   }
 
-  const Icon = iconMap[tool.icon] || null;
+  const Icon = iconMap[tool.icon as keyof typeof iconMap] || null;
+  const ToolComponent = ToolComponents[tool.slug] || null;
 
   return (
     <div className="max-w-5xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'Home', href: '/' },
-          { label: 'Tools', href: '/tools' },
+          { label: 'হোম', href: '/' },
+          { label: 'টুলস', href: '/tools' },
           { label: tool.name },
         ]}
       />
@@ -69,16 +94,14 @@ export default async function ToolPage({ params }: ToolPageProps) {
         <div className="lg:col-span-2">
             <Card>
                 <CardHeader>
-                    <CardTitle className='font-headline text-2xl'>Use the Tool</CardTitle>
+                    <CardTitle className='font-headline text-2xl'>টুলটি ব্যবহার করুন</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="prose prose-lg max-w-none font-body">
-                        {/* Placeholder for the actual tool implementation */}
-                        <p>The interactive component for the {tool.name} would be displayed here.</p>
+                    {ToolComponent ? <ToolComponent /> : (
                         <div className="p-8 border-2 border-dashed rounded-lg bg-muted/50 text-center text-muted-foreground">
-                            Tool Interface Area
+                            টুল ইন্টারফেস লোড হচ্ছে...
                         </div>
-                    </div>
+                    )}
                 </CardContent>
             </Card>
         </div>

@@ -13,6 +13,14 @@ async function parseMarkdownFile(fullPath: string) {
     const fileContents = fs.readFileSync(fullPath, 'utf8');
     const matterResult = matter(fileContents);
 
+    // If file is empty or just frontmatter, return empty content
+    if (matterResult.content.trim() === '') {
+        return {
+            contentHtml: '',
+            ...matterResult.data,
+        }
+    }
+
     const processedContent = await remark()
         .use(html)
         .process(matterResult.content);
@@ -29,18 +37,23 @@ async function parseMarkdownFile(fullPath: string) {
 
 export async function getTools(): Promise<Tool[]> {
     const fileNames = fs.readdirSync(toolsDirectory);
-    const allToolsData = await Promise.all(fileNames.map(async (fileName) => {
-        const slug = fileName.replace(/\.md$/, '');
-        const fullPath = path.join(toolsDirectory, fileName);
-        const fileContents = fs.readFileSync(fullPath, 'utf8');
-        const matterResult = matter(fileContents);
+    const allToolsDataPromises = fileNames
+        .filter(fileName => fileName.endsWith('.md'))
+        .map(async (fileName) => {
+            const slug = fileName.replace(/\.md$/, '');
+            const fullPath = path.join(toolsDirectory, fileName);
+            const fileContents = fs.readFileSync(fullPath, 'utf8');
+            if (fileContents.trim() === '') return null; // Skip empty files
+            const matterResult = matter(fileContents);
 
-        return {
-            id: slug,
-            slug,
-            ...matterResult.data,
-        } as Tool;
-    }));
+            return {
+                id: slug,
+                slug,
+                ...matterResult.data,
+            } as Tool;
+    });
+
+    const allToolsData = (await Promise.all(allToolsDataPromises)).filter(Boolean) as Tool[];
     return allToolsData;
 }
 
@@ -49,6 +62,9 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
     if (!fs.existsSync(fullPath)) {
         return null;
     }
+    const fileContents = fs.readFileSync(fullPath, 'utf8');
+    if (fileContents.trim() === '') return null; // Skip empty files
+
     const { contentHtml, ...data } = await parseMarkdownFile(fullPath);
     return {
         id: slug,
@@ -62,19 +78,29 @@ export async function getToolBySlug(slug: string): Promise<Tool | null> {
 // --- BLOG POSTS ---
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
+    if (!fs.existsSync(blogDirectory)) {
+        return [];
+    }
     const fileNames = fs.readdirSync(blogDirectory);
-    const allPostsData = await Promise.all(fileNames.map(async (fileName) => {
-        const slug = fileName.replace(/\.md$/, '');
-        const fullPath = path.join(blogDirectory, fileName);
-        const fileContents = fs.readFileSync(fullPath, 'utf8');
-        const matterResult = matter(fileContents);
-        
-        return {
-            id: slug,
-            slug,
-            ...matterResult.data,
-        } as BlogPost;
-    }));
+    const allPostsDataPromises = fileNames
+        .filter(fileName => fileName.endsWith('.md'))
+        .map(async (fileName) => {
+            const slug = fileName.replace(/\.md$/, '');
+            const fullPath = path.join(blogDirectory, fileName);
+            const fileContents = fs.readFileSync(fullPath, 'utf8');
+            if (fileContents.trim() === '') return null; // Skip empty files
+            
+            const matterResult = matter(fileContents);
+            
+            return {
+                id: slug,
+                slug,
+                ...matterResult.data,
+            } as BlogPost;
+    });
+
+    const allPostsData = (await Promise.all(allPostsDataPromises)).filter(Boolean) as BlogPost[];
+    
     // Sort posts by date in descending order
     return allPostsData.sort((a, b) => {
         if (a.publishedAt < b.publishedAt) {
@@ -90,6 +116,9 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
      if (!fs.existsSync(fullPath)) {
         return null;
     }
+    const fileContents = fs.readFileSync(fullPath, 'utf8');
+    if (fileContents.trim() === '') return null;
+
     const { contentHtml, ...data } = await parseMarkdownFile(fullPath);
     
     return {
