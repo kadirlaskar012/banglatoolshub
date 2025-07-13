@@ -255,8 +255,14 @@ Bangla Tools HUB থেকে হিসাব করা হয়েছে।
         <div className="w-full max-w-5xl mx-auto space-y-8">
             <Tabs value={country} onValueChange={(value) => setCountry(value as 'india' | 'bangladesh')}>
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="india">ভারত (India)</TabsTrigger>
-                    <TabsTrigger value="bangladesh">বাংলাদেশ (Bangladesh)</TabsTrigger>
+                    <TabsTrigger value="india" className="flex items-center gap-2">
+                        <span role="img" aria-label="India flag">🇮🇳</span>
+                        ভারত (India)
+                    </TabsTrigger>
+                    <TabsTrigger value="bangladesh" className="flex items-center gap-2">
+                        <span role="img" aria-label="Bangladesh flag">🇧🇩</span>
+                        বাংলাদেশ (Bangladesh)
+                    </TabsTrigger>
                 </TabsList>
             </Tabs>
             
