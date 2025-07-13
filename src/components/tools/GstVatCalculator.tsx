@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Copy, PlusCircle, Trash2, IndianRupee, Percent, Hash, Share2, History, X } from 'lucide-react';
+import { PlusCircle, Trash2, IndianRupee, Percent, Hash, Share2, History, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -32,6 +32,7 @@ interface HistoryItem {
     id: string;
     items: CalculationItem[];
     mode: 'add' | 'remove';
+    country: 'india' | 'bangladesh';
     transactionType: 'intra' | 'inter';
     timestamp: string;
     totalPrice: number;
@@ -42,6 +43,7 @@ const getInitialItems = (): CalculationItem[] => [{ id: 1, amount: 1000, rate: '
 export default function GstVatCalculator() {
     const [items, setItems] = useState<CalculationItem[]>(getInitialItems);
     const [mode, setMode] = useState<'add' | 'remove'>('add');
+    const [country, setCountry] = useState<'india' | 'bangladesh'>('india');
     const [transactionType, setTransactionType] = useState<'intra' | 'inter'>('intra');
     const { toast } = useToast();
     const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -70,6 +72,7 @@ export default function GstVatCalculator() {
             id: new Date().toISOString(),
             items,
             mode,
+            country,
             transactionType,
             timestamp: new Date().toLocaleString('bn-BD'),
             totalPrice: calcResult.finalPrice,
@@ -80,7 +83,7 @@ export default function GstVatCalculator() {
             saveHistoryToLocalStorage(updatedHistory);
             return updatedHistory;
         });
-    }, [items, mode, transactionType]);
+    }, [items, mode, country, transactionType]);
 
 
     const handleItemChange = (id: number, field: 'amount' | 'rate', value: string) => {
@@ -99,7 +102,7 @@ export default function GstVatCalculator() {
     };
 
     const addItem = () => {
-        setItems([...items, { id: Date.now(), amount: 0, rate: '18' }]);
+        setItems([...items, { id: Date.now(), amount: 0, rate: country === 'india' ? '18' : '15' }]);
     };
 
     const removeItem = (id: number) => {
@@ -134,11 +137,11 @@ export default function GstVatCalculator() {
             totalTaxableValue,
             totalTaxAmount,
             finalPrice,
-            cgst: transactionType === 'intra' ? totalTaxAmount / 2 : 0,
-            sgst: transactionType === 'intra' ? totalTaxAmount / 2 : 0,
-            igst: transactionType === 'inter' ? totalTaxAmount : 0,
+            cgst: country === 'india' && transactionType === 'intra' ? totalTaxAmount / 2 : 0,
+            sgst: country === 'india' && transactionType === 'intra' ? totalTaxAmount / 2 : 0,
+            igst: country === 'india' && transactionType === 'inter' ? totalTaxAmount : 0,
         };
-    }, [items, mode, transactionType]);
+    }, [items, mode, transactionType, country]);
     
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -147,24 +150,25 @@ export default function GstVatCalculator() {
             }
         }, 2000);
         return () => clearTimeout(handler);
-    }, [items, mode, transactionType, saveToHistory, totalCalculation]);
+    }, [items, mode, transactionType, country, saveToHistory, totalCalculation]);
 
     const formatCurrency = (value: number) => `${value.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} টাকা`;
     
     const handleShare = async () => {
         const { totalTaxableValue, totalTaxAmount, finalPrice, cgst, sgst, igst } = totalCalculation;
         const resultText = `
-জিএসটি হিসাবের ফলাফল:
+জিএসটি/ভ্যাট হিসাবের ফলাফল:
 ---------------------
 আসল মূল্য: ${formatCurrency(totalTaxableValue)}
 মোট কর: ${formatCurrency(totalTaxAmount)}
-${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCurrency(sgst)}` : `IGST: ${formatCurrency(igst)}`}
+${country === 'india' && transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCurrency(sgst)}` : ''}
+${country === 'india' && transactionType === 'inter' ? `IGST: ${formatCurrency(igst)}` : ''}
 ---------------------
 মোট মূল্য: ${formatCurrency(finalPrice)}
         `.trim();
         
         const shareData = {
-            title: 'জিএসটি হিসাব',
+            title: 'জিএসটি/ভ্যাট হিসাব',
             text: resultText,
             url: window.location.href
         };
@@ -173,7 +177,6 @@ ${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCu
             try {
                 await navigator.share(shareData);
             } catch (err) {
-                 // Fallback to clipboard if share fails
                 navigator.clipboard.writeText(resultText);
                 toast({
                     title: "কপি হয়েছে!",
@@ -181,7 +184,6 @@ ${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCu
                 });
             }
         } else {
-            // Fallback for browsers that don't support Web Share API
             navigator.clipboard.writeText(resultText);
             toast({
                 title: "কপি হয়েছে!",
@@ -193,6 +195,7 @@ ${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCu
     const loadFromHistory = (historyItem: HistoryItem) => {
         setItems(historyItem.items);
         setMode(historyItem.mode);
+        setCountry(historyItem.country);
         setTransactionType(historyItem.transactionType);
         toast({ title: "ইতিহাস লোড হয়েছে" });
     };
@@ -214,10 +217,17 @@ ${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCu
 
     return (
         <div className="w-full max-w-5xl mx-auto space-y-8">
+            <Tabs value={country} onValueChange={(value) => setCountry(value as 'india' | 'bangladesh')}>
+                <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="india">ভারত (India)</TabsTrigger>
+                    <TabsTrigger value="bangladesh">বাংলাদেশ (Bangladesh)</TabsTrigger>
+                </TabsList>
+            </Tabs>
+            
             <Tabs value={mode} onValueChange={(value) => setMode(value as 'add' | 'remove')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="add">জিএসটি যোগ করুন (Exclusive)</TabsTrigger>
-                    <TabsTrigger value="remove">জিএসটি বাদ দিন (Inclusive)</TabsTrigger>
+                    <TabsTrigger value="add">কর যোগ করুন (Exclusive)</TabsTrigger>
+                    <TabsTrigger value="remove">কর বাদ দিন (Inclusive)</TabsTrigger>
                 </TabsList>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
@@ -256,14 +266,16 @@ ${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCu
                                                                 <SelectItem key={r} value={r}>{r}%</SelectItem>
                                                             ))}
                                                         </SelectGroup>
-                                                        <SelectGroup>
-                                                            <SelectLabel>ক্যাটাগরি অনুযায়ী</SelectLabel>
-                                                            {Object.entries(GST_CATEGORIES).map(([key, value]) => (
-                                                                <SelectItem key={key} value={key}>
-                                                                    {value.name} ({value.rate}%)
-                                                                </SelectItem>
-                                                            ))}
-                                                        </SelectGroup>
+                                                        {country === 'india' && (
+                                                            <SelectGroup>
+                                                                <SelectLabel>ক্যাটাগরি অনুযায়ী</SelectLabel>
+                                                                {Object.entries(GST_CATEGORIES).map(([key, value]) => (
+                                                                    <SelectItem key={key} value={key}>
+                                                                        {value.name} ({value.rate}%)
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectGroup>
+                                                        )}
                                                     </SelectContent>
                                                 </Select>
                                             </div>
@@ -284,18 +296,20 @@ ${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCu
                              <Button variant="outline" onClick={addItem} className="w-full">
                                 <PlusCircle className="mr-2 h-4 w-4" /> নতুন আইটেম যোগ করুন
                             </Button>
-                             <div>
-                                <Label htmlFor="transactionType" className="text-base">লেনদেনের ধরন (ভারতের জন্য)</Label>
-                                 <Select onValueChange={(value) => setTransactionType(value as 'intra' | 'inter')} value={transactionType}>
-                                    <SelectTrigger className="mt-2 text-base h-12">
-                                        <SelectValue placeholder="ধরন নির্বাচন করুন" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="intra">রাজ্যের মধ্যে (Intra-State)</SelectItem>
-                                        <SelectItem value="inter">রাজ্যের বাইরে (Inter-State)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                             {country === 'india' && (
+                                <div>
+                                    <Label htmlFor="transactionType" className="text-base">লেনদেনের ধরন (ভারতের জন্য)</Label>
+                                    <Select onValueChange={(value) => setTransactionType(value as 'intra' | 'inter')} value={transactionType}>
+                                        <SelectTrigger className="mt-2 text-base h-12">
+                                            <SelectValue placeholder="ধরন নির্বাচন করুন" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="intra">রাজ্যের মধ্যে (Intra-State)</SelectItem>
+                                            <SelectItem value="inter">রাজ্যের বাইরে (Inter-State)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                             )}
                         </CardContent>
                     </Card>
                     <div className="space-y-6">
@@ -316,23 +330,32 @@ ${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCu
                                     <span>করযোগ্য মূল্য:</span>
                                     <span className="font-semibold">{formatCurrency(totalCalculation.totalTaxableValue)}</span>
                                 </div>
-                                {transactionType === 'intra' ? (
-                                    <>
+                                
+                                {country === 'india' ? (
+                                    transactionType === 'intra' ? (
+                                        <>
+                                            <div className="flex justify-between items-center text-sm text-muted-foreground pl-4">
+                                                <span>CGST:</span>
+                                                <span className="font-semibold">{formatCurrency(totalCalculation.cgst)}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm text-muted-foreground pl-4">
+                                                <span>SGST:</span>
+                                                <span className="font-semibold">{formatCurrency(totalCalculation.sgst)}</span>
+                                            </div>
+                                        </>
+                                    ) : (
                                         <div className="flex justify-between items-center text-sm text-muted-foreground pl-4">
-                                            <span>CGST:</span>
-                                            <span className="font-semibold">{formatCurrency(totalCalculation.cgst)}</span>
+                                            <span>IGST:</span>
+                                            <span className="font-semibold">{formatCurrency(totalCalculation.igst)}</span>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm text-muted-foreground pl-4">
-                                            <span>SGST:</span>
-                                            <span className="font-semibold">{formatCurrency(totalCalculation.sgst)}</span>
-                                        </div>
-                                    </>
+                                    )
                                 ) : (
-                                    <div className="flex justify-between items-center text-sm text-muted-foreground pl-4">
-                                        <span>IGST:</span>
-                                        <span className="font-semibold">{formatCurrency(totalCalculation.igst)}</span>
+                                    <div className="flex justify-between items-center">
+                                        <span>মোট কর:</span>
+                                        <span className="font-semibold">{formatCurrency(totalCalculation.totalTaxAmount)}</span>
                                     </div>
                                 )}
+
                                 <Separator />
                                 <div className="flex justify-between items-center text-2xl font-bold text-primary">
                                     <span>মোট মূল্য:</span>
@@ -358,7 +381,7 @@ ${transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCu
                                                             <p className="text-xs text-muted-foreground">{hist.timestamp}</p>
                                                         </div>
                                                         <div className="text-sm text-muted-foreground">
-                                                            {hist.items.length} আইটেম
+                                                            {hist.items.length} আইটেম ({hist.country === 'india' ? 'ভারত' : 'বাংলাদেশ'})
                                                         </div>
                                                     </div>
                                                     <Button
