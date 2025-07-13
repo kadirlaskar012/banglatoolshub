@@ -16,6 +16,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Separator } from '@/components/ui/separator';
+import AiToolSuggester from '@/components/AiToolSuggester';
+import SearchInput from '@/components/SearchInput';
 // import GiscusComments from '@/components/GiscusComments';
 
 type BlogPostPageProps = {
@@ -174,7 +176,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const headings = getHeadings(post.contentHtml);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto">
       <BlogSchemaMarkup post={post} />
       <Breadcrumbs
         items={[
@@ -183,121 +185,126 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           { label: post.title },
         ]}
       />
-      <article>
-        <h1 className="text-4xl lg:text-5xl font-bold font-headline leading-tight">
-          {post.title}
-        </h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mt-6">
+        <main className="lg:col-span-2 space-y-8">
+            <article>
+                <h1 className="text-4xl lg:text-5xl font-bold font-headline leading-tight">
+                {post.title}
+                </h1>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span>{post.author}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <time dateTime={post.publishedAt}>
-              {format(parseISO(post.publishedAt), 'MMMM d, yyyy')}
-            </time>
-          </div>
-        </div>
-        
-        {post.imageUrl && (
-            <Image
-            src={post.imageUrl}
-            alt={post.title}
-            width={1200}
-            height={600}
-            className="my-8 rounded-lg object-cover aspect-video"
-            priority
-            data-ai-hint="technology abstract"
-            />
-        )}
-        </article>
-        
-        {headings.length > 0 && (
-          <Card className="bg-muted/50">
-            <Accordion type="single" collapsible defaultValue="toc">
-              <AccordionItem value="toc" className="border-b-0">
-                <AccordionTrigger className="px-6 py-4 text-lg font-headline hover:no-underline">
-                  <div className="flex items-center gap-3">
-                    <List className="w-5 h-5 text-primary"/>
-                    সূচিপত্র (Table of Contents)
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pb-4">
-                  <ul className="space-y-2 text-base list-decimal list-inside text-primary">
-                    {headings.map(heading => (
-                        <li key={heading.id}>
-                          <a href={`#${heading.id}`} className="font-medium text-foreground hover:underline hover:text-primary">
-                              {heading.text}
-                          </a>
-                        </li>
-                    ))}
-                  </ul>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </Card>
-        )}
-
-        <Card>
-          <CardContent className="p-6">
-            <div 
-                className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
-                dangerouslySetInnerHTML={{ __html: post.contentHtml }}
-            />
-          </CardContent>
-        </Card>
-
-      {post.faq && post.faq.length > 0 && (
-          <section>
-              <Card>
-                  <CardHeader>
-                      <CardTitle className="flex items-center gap-3 font-headline text-xl">
-                          <HelpCircle className="w-5 h-5 text-primary"/>
-                          সাধারণ প্রশ্ন ও উত্তর (FAQ)
-                      </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <Accordion type="single" collapsible className="w-full">
-                          {post.faq.map((item, index) => (
-                              <AccordionItem value={`item-${index}`} key={index}>
-                                  <AccordionTrigger className="text-left font-semibold">{item.question}</AccordionTrigger>
-                                  <AccordionContent className="prose prose-lg max-w-none font-body">
-                                      <p>{item.answer}</p>
-                                  </AccordionContent>
-                              </AccordionItem>
-                          ))}
-                      </Accordion>
-                  </CardContent>
-              </Card>
-          </section>
-      )}
-
-      {validRelatedTools.length > 0 && (
-          <aside>
-            <Card className="bg-secondary/50">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-3 font-headline text-xl">
-                        <Wrench className="w-5 h-5 text-primary"/>
-                        সম্পর্কিত টুলস
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <ul className="space-y-2">
-                        {validRelatedTools.map(tool => tool && (
-                            <li key={tool.id}>
-                                <Link href={`/tools/${tool.slug}`} className="font-semibold text-primary hover:underline">
-                                    {tool.name}
-                                </Link>
-                                <p className="text-sm text-muted-foreground">{tool.description}</p>
+                <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span>{post.author}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <time dateTime={post.publishedAt}>
+                    {format(parseISO(post.publishedAt), 'MMMM d, yyyy')}
+                    </time>
+                </div>
+                </div>
+                
+                {post.imageUrl && (
+                    <Image
+                    src={post.imageUrl}
+                    alt={post.title}
+                    width={1200}
+                    height={600}
+                    className="my-8 rounded-lg object-cover aspect-video"
+                    priority
+                    data-ai-hint="technology abstract"
+                    />
+                )}
+            </article>
+            
+            {headings.length > 0 && (
+            <Card className="bg-muted/50">
+                <Accordion type="single" collapsible defaultValue="toc">
+                <AccordionItem value="toc" className="border-b-0">
+                    <AccordionTrigger className="px-6 py-4 text-lg font-headline hover:no-underline">
+                    <div className="flex items-center gap-3">
+                        <List className="w-5 h-5 text-primary"/>
+                        সূচিপত্র (Table of Contents)
+                    </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-4">
+                    <ul className="space-y-2 text-base list-decimal list-inside text-primary">
+                        {headings.map(heading => (
+                            <li key={heading.id}>
+                            <a href={`#${heading.id}`} className="font-medium text-foreground hover:underline hover:text-primary">
+                                {heading.text}
+                            </a>
                             </li>
                         ))}
                     </ul>
-                </CardContent>
+                    </AccordionContent>
+                </AccordionItem>
+                </Accordion>
             </Card>
-          </aside>
-      )}
+            )}
+
+            <Card>
+            <CardContent className="p-6">
+                <div 
+                    className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
+                    dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+                />
+            </CardContent>
+            </Card>
+
+            {post.faq && post.faq.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 font-headline text-xl">
+                            <HelpCircle className="w-5 h-5 text-primary"/>
+                            সাধারণ প্রশ্ন ও উত্তর (FAQ)
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Accordion type="single" collapsible className="w-full">
+                            {post.faq.map((item, index) => (
+                                <AccordionItem value={`item-${index}`} key={index}>
+                                    <AccordionTrigger className="text-left font-semibold">{item.question}</AccordionTrigger>
+                                    <AccordionContent className="prose prose-lg max-w-none font-body">
+                                        <p>{item.answer}</p>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    </CardContent>
+                </Card>
+            )}
+
+            {validRelatedTools.length > 0 && (
+                <Card className="bg-secondary/50">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 font-headline text-xl">
+                            <Wrench className="w-5 h-5 text-primary"/>
+                            সম্পর্কিত টুলস
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ul className="space-y-2">
+                            {validRelatedTools.map(tool => tool && (
+                                <li key={tool.id}>
+                                    <Link href={`/tools/${tool.slug}`} className="font-semibold text-primary hover:underline">
+                                        {tool.name}
+                                    </Link>
+                                    <p className="text-sm text-muted-foreground">{tool.description}</p>
+                                </li>
+                            ))}
+                        </ul>
+                    </CardContent>
+                </Card>
+            )}
+        </main>
+        <aside className="lg:col-span-1 space-y-8">
+            <SearchInput />
+            <AiToolSuggester content={post.contentHtml} />
+        </aside>
+      </div>
 
       {/* 
       <Separator className='my-12' />

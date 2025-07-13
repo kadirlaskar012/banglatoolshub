@@ -1,9 +1,12 @@
+
 import type { Metadata } from 'next';
 import { AppProvider } from '@/components/AppProvider';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { getMenuData } from '@/lib/data';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
   title: 'বাংলা টুলস হাব',
@@ -34,7 +37,11 @@ export default async function RootLayout({
       <body
         className={cn('min-h-screen bg-background font-body antialiased')}
       >
-        <AppProvider menuData={menuData}>{children}</AppProvider>
+        <div className="flex min-h-screen flex-col">
+          <Header menuData={menuData} />
+          <main className="container flex-grow px-4 md:px-8 py-8 md:py-12">{children}</main>
+          <Footer />
+        </div>
         <Toaster />
       </body>
     </html>

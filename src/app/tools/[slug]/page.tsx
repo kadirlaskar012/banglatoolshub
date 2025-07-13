@@ -18,6 +18,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import SearchInput from '@/components/SearchInput';
 
 // Dynamically import all tool components
 const ToolComponents: { [key: string]: React.ComponentType<any> } = {
@@ -217,7 +218,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const ToolComponent = ToolComponents[tool.slug] || null;
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       <ToolSchemaMarkup tool={tool} />
       <Breadcrumbs
         items={[
@@ -315,6 +316,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
         </main>
         <aside className="lg:col-span-1 space-y-8">
+          <SearchInput />
           <AiToolSuggester content={tool.contentHtml} />
         </aside>
       </div>
@@ -331,7 +333,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
               এই টুলটি সম্পর্কে আরও জানতে পড়ুন।
             </p>
           </div>
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {relatedPosts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
