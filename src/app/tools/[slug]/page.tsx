@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import { getTools, getToolBySlug, getBlogPosts } from '@/lib/data';
 import type { Metadata } from 'next';
@@ -78,6 +79,84 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
   };
 }
 
+const ToolSchemaMarkup = ({ tool }: { tool: Tool }) => {
+    const softwareSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: tool.name,
+      description: tool.longDescription,
+      applicationCategory: 'BrowserApplication',
+      operatingSystem: 'Any',
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'BDT',
+      },
+    };
+  
+    const faqSchema = tool.faq && tool.faq.length > 0 ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: tool.faq.map(item => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    } : null;
+  
+    // Generic HowTo schema, can be customized per tool later if needed
+    const howToSteps = [
+        {
+            "@type": "HowToStep",
+            "name": "ধাপ ১: তথ্য ইনপুট করুন",
+            "text": "টুলের প্রয়োজনীয় ইনপুট ফিল্ডে আপনার ডেটা বা তথ্য লিখুন। যেমন, বয়স ক্যালকুলেটরের জন্য জন্ম তারিখ দিন।",
+            "url": `${process.env.NEXT_PUBLIC_BASE_URL}/tools/${tool.slug}#tool-interface`
+        },
+        {
+            "@type": "HowToStep",
+            "name": "ধাপ ২: গণনা/রূপান্তর করুন",
+            "text": "মূল বাটনে (যেমন 'গণনা করুন' বা 'রূপান্তর করুন') ক্লিক করে প্রক্রিয়া শুরু করুন।",
+            "url": `${process.env.NEXT_PUBLIC_BASE_URL}/tools/${tool.slug}#tool-interface`
+        },
+        {
+            "@type": "HowToStep",
+            "name": "ধাপ ৩: ফলাফল দেখুন",
+            "text": "স্ক্রিনে প্রদর্শিত ফলাফল দেখুন। প্রয়োজনে ফলাফল কপি বা শেয়ার করুন।",
+            "url": `${process.env.NEXT_PUBLIC_BASE_URL}/tools/${tool.slug}#tool-interface`
+        }
+    ];
+
+    const howToSchema = {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": `কীভাবে ${tool.name} ব্যবহার করবেন`,
+        "description": `${tool.name} ব্যবহার করে কীভাবে সহজে আপনার কাজ সম্পন্ন করবেন তার ধাপসমূহ।`,
+        "step": howToSteps
+    };
+  
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }}
+        />
+        {faqSchema && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+          />
+        )}
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
+        />
+      </>
+    );
+  };
+
 export default async function ToolPage({ params }: ToolPageProps) {
   const tool = await getToolBySlug(params.slug);
   
@@ -98,6 +177,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
   return (
     <div className="max-w-5xl mx-auto">
+      <ToolSchemaMarkup tool={tool} />
       <Breadcrumbs
         items={[
           { label: 'Home', href: '/' },
@@ -123,7 +203,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
         <main className="lg:col-span-2 space-y-8">
-            <Card>
+            <Card id="tool-interface">
                 <CardContent className="p-6">
                     {ToolComponent ? <ToolComponent /> : (
                         <div className="p-8 border-2 border-dashed rounded-lg bg-muted/50 text-center text-muted-foreground">
@@ -156,7 +236,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
             )}
 
             <Card>
-              <CardContent className="p-6">
+              <CardHeader>
+                <CardTitle className="font-headline text-2xl">
+                    {tool.name} সম্পর্কে বিস্তারিত
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div 
                   className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
                   dangerouslySetInnerHTML={{ __html: tool.contentHtml }}
@@ -215,3 +300,5 @@ export default async function ToolPage({ params }: ToolPageProps) {
     </div>
   );
 }
+
+    
