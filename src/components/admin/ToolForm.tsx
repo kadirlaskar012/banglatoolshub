@@ -7,8 +7,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { iconMap } from '@/components/icons';
 import { Separator } from '@/components/ui/separator';
 
 function SubmitButton() {
@@ -46,20 +44,9 @@ export function ToolForm() {
                         <Label htmlFor="longDescription">Long Description</Label>
                         <Textarea id="longDescription" name="longDescription" placeholder="A more detailed explanation of what the tool does." required />
                     </div>
-                    <div className="grid md:grid-cols-2 gap-6">
-                         <div className="space-y-2">
-                            <Label htmlFor="category">Category</Label>
-                            <Input id="category" name="category" placeholder="e.g. Writing Utilities" required />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="icon">Icon</Label>
-                             <select name="icon" id="icon" required className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1">
-                                <option value="" disabled selected>Select an icon</option>
-                                {Object.keys(iconMap).map(iconKey => (
-                                    <option key={iconKey} value={iconKey}>{iconKey}</option>
-                                ))}
-                            </select>
-                        </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="category">Category</Label>
+                        <Input id="category" name="category" placeholder="e.g. Writing Utilities" required />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="content">Content for AI Suggestions</Label>

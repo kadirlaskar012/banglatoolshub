@@ -16,7 +16,6 @@ const ToolSchema = z.object({
     description: z.string().min(1, "Short description is required."),
     longDescription: z.string().min(1, "Long description is required."),
     category: z.string().min(1, "Category is required."),
-    icon: z.string().min(1, "Icon is required."),
     content: z.string().min(1, "Content for AI suggestions is required."),
     metaTitle: z.string().optional(),
     metaDescription: z.string().optional(),
@@ -35,6 +34,7 @@ export async function addTool(formData: FormData) {
     try {
         const newTool: Omit<Tool, 'id'> = {
             ...validatedFields.data,
+            icon: 'pen', // Default icon
         };
         await addDoc(collection(db, 'tools'), newTool);
     } catch (error) {
