@@ -48,6 +48,7 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  manifest: '/manifest.json',
 };
 
 export default async function RootLayout({
@@ -70,14 +71,13 @@ export default async function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital,wght@0,400;1,400&family=Hind+Siliguri:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="manifest" href="/manifest.json" />
       </head>
       <body
         className={cn('min-h-screen bg-background font-body antialiased')}
       >
         <div className="flex min-h-screen flex-col">
           <Header menuData={menuData} />
-          <main className="container flex-grow px-4 py-8 md:py-12">{children}</main>
+          <main className="container flex-grow px-6 py-8 md:py-12">{children}</main>
           <Footer />
         </div>
         <Toaster />
