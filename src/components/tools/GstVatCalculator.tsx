@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Trash2, IndianRupee, Percent, Hash, Share2, History, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import html2canvas from 'html2canvas';
 
 const PRESET_RATES = ['5', '12', '18', '28'];
 const GST_CATEGORIES = {
@@ -47,6 +48,8 @@ export default function GstVatCalculator() {
     const [transactionType, setTransactionType] = useState<'intra' | 'inter'>('intra');
     const { toast } = useToast();
     const [history, setHistory] = useState<HistoryItem[]>([]);
+    const resultCardRef = useRef<HTMLDivElement>(null);
+
 
     useEffect(() => {
         try {
@@ -68,7 +71,7 @@ export default function GstVatCalculator() {
     };
     
     const saveToHistory = useCallback((calcResult: any) => {
-        if (!calcResult || typeof calcResult.finalPrice === 'undefined') return;
+        if (!calcResult || typeof calcResult.finalPrice === 'undefined' || calcResult.finalPrice === 0) return;
 
         const newHistoryItem: HistoryItem = {
             id: new Date().toISOString(),
@@ -166,36 +169,62 @@ export default function GstVatCalculator() {
         const resultText = `
 জিএসটি/ভ্যাট হিসাবের ফলাফল:
 ---------------------
-আসল মূল্য: ${formatCurrency(totalTaxableValue)}
+করযোগ্য মূল্য: ${formatCurrency(totalTaxableValue)}
 মোট কর: ${formatCurrency(totalTaxAmount)}
 ${country === 'india' && transactionType === 'intra' ? `CGST: ${formatCurrency(cgst)}\nSGST: ${formatCurrency(sgst)}` : ''}
 ${country === 'india' && transactionType === 'inter' ? `IGST: ${formatCurrency(igst)}` : ''}
 ---------------------
 মোট মূল্য: ${formatCurrency(finalPrice)}
+
+Bangla Tools HUB থেকে হিসাব করা হয়েছে।
         `.trim();
         
-        const shareData = {
-            title: 'জিএসটি/ভ্যাট হিসাব',
-            text: resultText,
-            url: window.location.href
-        };
+        const element = resultCardRef.current;
+        if (!element) return;
 
-        if (navigator.share) {
+        try {
+            const canvas = await html2canvas(element, { 
+                backgroundColor: null, // Makes background transparent if the element has no bg color
+                scale: 2 // Increases resolution
+            });
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    throw new Error("Canvas to Blob conversion failed");
+                }
+                
+                const file = new File([blob], "gst-vat-calculation.png", { type: "image/png" });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'জিএসটি/ভ্যাট হিসাব',
+                        text: 'আমার জিএসটি/ভ্যাট হিসাবের ফলাফল দেখুন।',
+                        files: [file],
+                    });
+                } else {
+                    // Fallback for browsers that don't support sharing files
+                    await navigator.share({
+                        title: 'জিএসটি/ভ্যাট হিসাব',
+                        text: resultText,
+                        url: window.location.href,
+                    });
+                }
+            });
+        } catch (err) {
+            // Fallback to text sharing if image generation or sharing fails
             try {
-                await navigator.share(shareData);
-            } catch (err) {
+                await navigator.share({
+                    title: 'জিএসটি/ভ্যাট হিসাব',
+                    text: resultText,
+                    url: window.location.href,
+                });
+            } catch (shareErr) {
+                // If even text sharing fails, copy to clipboard
                 navigator.clipboard.writeText(resultText);
                 toast({
                     title: "কপি হয়েছে!",
                     description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
                 });
             }
-        } else {
-            navigator.clipboard.writeText(resultText);
-            toast({
-                title: "কপি হয়েছে!",
-                description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
-            });
         }
     };
     
@@ -233,8 +262,8 @@ ${country === 'india' && transactionType === 'inter' ? `IGST: ${formatCurrency(i
             
             <Tabs value={mode} onValueChange={(value) => setMode(value as 'add' | 'remove')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="add">কর যোগ করুন (Exclusive)</TabsTrigger>
-                    <TabsTrigger value="remove">কর বাদ দিন (Inclusive)</TabsTrigger>
+                    <TabsTrigger value="add">জিএসটি যোগ করুন (Exclusive)</TabsTrigger>
+                    <TabsTrigger value="remove">জিএসটি বাদ দিন (Inclusive)</TabsTrigger>
                 </TabsList>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
@@ -320,7 +349,7 @@ ${country === 'india' && transactionType === 'inter' ? `IGST: ${formatCurrency(i
                         </CardContent>
                     </Card>
                     <div className="space-y-6">
-                        <Card className="bg-muted/50">
+                        <Card ref={resultCardRef} className="bg-muted/50">
                             <CardHeader>
                                 <div className="flex justify-between items-center">
                                     <div>
