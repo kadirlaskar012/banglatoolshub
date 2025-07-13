@@ -10,7 +10,13 @@ import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { BlogPost, Tool } from '@/lib/types';
 import PostCard from '@/components/PostCard';
-import { BookText, List } from 'lucide-react';
+import { BookText, List, HelpCircle } from 'lucide-react';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 // Dynamically import all tool components
 const ToolComponents: { [key: string]: React.ComponentType<any> } = {
@@ -157,6 +163,29 @@ export default async function ToolPage({ params }: ToolPageProps) {
                 />
               </CardContent>
             </Card>
+
+            {tool.faq && tool.faq.length > 0 && (
+              <Card>
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-3 font-headline text-xl">
+                          <HelpCircle className="w-5 h-5 text-primary"/>
+                          সাধারণ প্রশ্ন ও উত্তর (FAQ)
+                      </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <Accordion type="single" collapsible className="w-full">
+                          {tool.faq.map((item, index) => (
+                              <AccordionItem value={`item-${index}`} key={index}>
+                                  <AccordionTrigger className="text-left font-semibold">{item.question}</AccordionTrigger>
+                                  <AccordionContent className="prose prose-lg max-w-none font-body">
+                                      <p>{item.answer}</p>
+                                  </AccordionContent>
+                              </AccordionItem>
+                          ))}
+                      </Accordion>
+                  </CardContent>
+              </Card>
+            )}
 
         </main>
         <aside className="lg:col-span-1">

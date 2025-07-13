@@ -12,6 +12,10 @@ export interface Tool {
   contentHtml: string;
   metaTitle?: string;
   metaDescription?: string;
+  faq?: {
+    question: string;
+    answer: string;
+  }[];
 }
 
 export interface BlogPost {
