@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { CheckCircle, Terminal, XCircle } from 'lucide-react';
+import { CheckCircle, Terminal, XCircle, Clock } from 'lucide-react';
 import { checkPlagiarism, type PlagiarismResult as ApiPlagiarismResult } from '@/ai/flows/plagiarism-checker-flow';
 
 interface HighlightedSentence {
@@ -53,6 +53,45 @@ export default function AiPlagiarismChecker() {
   const [isApiMode, setIsApiMode] = useState(false);
   const { toast } = useToast();
 
+  const [remainingChecks, setRemainingChecks] = useState(DAILY_LIMIT);
+  const [cooldown, setCooldown] = useState('');
+
+  const updateRemainingChecks = () => {
+    const usage = getApiUsage();
+    const today = new Date().toISOString().split('T')[0];
+    if (usage.date === today) {
+        setRemainingChecks(Math.max(0, DAILY_LIMIT - usage.count));
+    } else {
+        setRemainingChecks(DAILY_LIMIT);
+    }
+  };
+
+  useEffect(() => {
+    updateRemainingChecks();
+
+    const intervalId = setInterval(() => {
+        const usage = getApiUsage();
+        const today = new Date().toISOString().split('T')[0];
+        if (usage.date === today && usage.count >= DAILY_LIMIT) {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+            const diff = tomorrow.getTime() - now.getTime();
+            
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+            setCooldown(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+        } else {
+            setCooldown('');
+        }
+    }, 1000);
+    
+    return () => clearInterval(intervalId);
+  }, []);
+  
   const handleOfflineCheck = (inputText: string): PlagiarismResult | null => {
     if (!inputText.trim()) {
         return null;
@@ -92,10 +131,7 @@ export default function AiPlagiarismChecker() {
   };
 
   const handleApiCheck = async (inputText: string) => {
-    const usage = getApiUsage();
-    const today = new Date().toISOString().split('T')[0];
-
-    if (usage.date === today && usage.count >= DAILY_LIMIT) {
+    if (remainingChecks <= 0) {
       toast({
         title: "দৈনিক সীমা শেষ",
         description: "আপনি আজকের জন্য অনলাইন যাচাইয়ের সীমা শেষ করেছেন। অনুগ্রহ করে আগামীকাল আবার চেষ্টা করুন।",
@@ -108,6 +144,7 @@ export default function AiPlagiarismChecker() {
     try {
         const apiResult: ApiPlagiarismResult = await checkPlagiarism({ text: inputText });
         updateApiUsage();
+        updateRemainingChecks();
 
         const transformedResult: PlagiarismResult = {
             highlightedContent: apiResult.sentences.map(s => ({ text: s.text, isDuplicate: s.isPlagiarized })),
@@ -142,14 +179,16 @@ export default function AiPlagiarismChecker() {
     if (isApiMode) {
         await handleApiCheck(text);
     } else {
-        // Offline check logic
         setTimeout(() => {
           const checkResult = handleOfflineCheck(text);
           setResult(checkResult);
+          setIsLoading(false);
         }, 500);
     }
     
-    setIsLoading(false);
+    if (isApiMode) {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -167,7 +206,17 @@ export default function AiPlagiarismChecker() {
             <Terminal className="h-4 w-4" />
             <AlertTitle>অনলাইন মোড (AI Powered)</AlertTitle>
             <AlertDescription>
-              এই মোডটি শক্তিশালী Gemini AI ব্যবহার করে আপনার লেখার মৌলিকতা ইন্টারনেটের বিশাল তথ্যভান্ডারের সাথে তুলনা করে। দৈনিক ব্যবহারের সীমা: ২ বার।
+              এই মোডটি শক্তিশালী Gemini AI ব্যবহার করে আপনার লেখার মৌলিকতা ইন্টারনেটের সাথে তুলনা করে। 
+              {cooldown ? (
+                <span className="text-destructive font-semibold flex items-center gap-2 mt-2">
+                    <Clock className="w-4 h-4"/>
+                    পরবর্তী চেষ্টা: {cooldown}
+                </span>
+              ) : (
+                <span className="text-primary font-semibold block mt-2">
+                    আজকের জন্য বাকি আছে: {remainingChecks.toLocaleString('bn-BD')} বার
+                </span>
+              )}
             </AlertDescription>
           </Alert>
        )}
@@ -179,7 +228,7 @@ export default function AiPlagiarismChecker() {
         className="min-h-[250px] text-base"
         disabled={isLoading}
       />
-      <Button onClick={handleCheck} disabled={isLoading || !text.trim()} className="w-full md:w-auto text-lg py-6">
+      <Button onClick={handleCheck} disabled={isLoading || !text.trim() || (isApiMode && remainingChecks <= 0)} className="w-full md:w-auto text-lg py-6">
         {isLoading ? 'যাচাই করা হচ্ছে...' : 'মৌলিকতা যাচাই করুন'}
       </Button>
 
