@@ -1,8 +1,9 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getTools } from '@/lib/data';
+import Link from 'next/link';
 
 export default async function AdminToolsPage() {
   const tools = await getTools();
@@ -14,9 +15,11 @@ export default async function AdminToolsPage() {
                 <h1 className="text-3xl font-bold font-headline">Manage Tools</h1>
                 <p className="text-muted-foreground">Here you can add, edit, and delete tools.</p>
             </div>
-            <Button>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add New Tool
+            <Button asChild>
+                <Link href="/admin/tools/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add New Tool
+                </Link>
             </Button>
         </div>
 
@@ -36,6 +39,7 @@ export default async function AdminToolsPage() {
                     <TableCell className="font-medium">{tool.name}</TableCell>
                     <TableCell>{tool.category}</TableCell>
                     <TableCell className="text-right">
+                      {/* Edit/Delete buttons will be added later */}
                       <Button variant="ghost" size="sm">Edit</Button>
                     </TableCell>
                   </TableRow>

@@ -1,9 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getBlogPosts } from '@/lib/data';
 import { format, parseISO } from 'date-fns';
+import Link from 'next/link';
 
 export default async function AdminBlogPage() {
     const posts = await getBlogPosts();
@@ -15,9 +16,11 @@ export default async function AdminBlogPage() {
                     <h1 className="text-3xl font-bold font-headline">Manage Blog Posts</h1>
                     <p className="text-muted-foreground">Here you can create, edit, and publish articles.</p>
                 </div>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    New Post
+                 <Button asChild>
+                    <Link href="/admin/blog/new">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        New Post
+                    </Link>
                 </Button>
             </div>
 
@@ -37,9 +40,10 @@ export default async function AdminBlogPage() {
                             <TableRow key={post.id}>
                                 <TableCell className="font-medium">{post.title}</TableCell>
                                 <TableCell>{post.author}</TableCell>
-                                <TableCell>{format(parseISO(post.publishedAt), 'MMM d, yyyy')}</TableCell>
+                                <TableCell>{post.publishedAt ? format(parseISO(post.publishedAt), 'MMM d, yyyy') : 'Draft'}</TableCell>
                                 <TableCell className="text-right">
-                                <Button variant="ghost" size="sm">Edit</Button>
+                                  {/* Edit/Delete buttons will be added later */}
+                                  <Button variant="ghost" size="sm">Edit</Button>
                                 </TableCell>
                             </TableRow>
                             ))}
