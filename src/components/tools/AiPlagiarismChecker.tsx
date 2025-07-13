@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle, Terminal, XCircle } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { checkPlagiarism, type PlagiarismResult as ApiPlagiarismResult } from '@/ai/flows/plagiarism-checker-flow';
 
 interface HighlightedSentence {
   text: string;
@@ -21,19 +21,28 @@ interface PlagiarismResult {
     duplicatePercentage: number;
 }
 
-// Placeholder for future API integration
-const checkPlagiarismWithApi = async (text: string): Promise<PlagiarismResult> => {
-  console.log("API Mode is not implemented yet.");
-  // In the future, you would make an API call here.
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        highlightedContent: [{ text, isDuplicate: false }],
-        uniquePercentage: 100,
-        duplicatePercentage: 0,
-      });
-    }, 2000);
-  });
+const DAILY_LIMIT = 2;
+
+const getApiUsage = (): { count: number; date: string } => {
+  if (typeof window === 'undefined') return { count: 0, date: '' };
+  const storedUsage = localStorage.getItem('apiPlagiarismUsage');
+  if (storedUsage) {
+    return JSON.parse(storedUsage);
+  }
+  return { count: 0, date: new Date().toISOString().split('T')[0] };
+};
+
+const updateApiUsage = () => {
+  if (typeof window === 'undefined') return;
+  const usage = getApiUsage();
+  const today = new Date().toISOString().split('T')[0];
+  if (usage.date === today) {
+    usage.count += 1;
+  } else {
+    usage.count = 1;
+    usage.date = today;
+  }
+  localStorage.setItem('apiPlagiarismUsage', JSON.stringify(usage));
 };
 
 
@@ -82,33 +91,65 @@ export default function AiPlagiarismChecker() {
     };
   };
 
+  const handleApiCheck = async (inputText: string) => {
+    const usage = getApiUsage();
+    const today = new Date().toISOString().split('T')[0];
+
+    if (usage.date === today && usage.count >= DAILY_LIMIT) {
+      toast({
+        title: "দৈনিক সীমা শেষ",
+        description: "আপনি আজকের জন্য অনলাইন যাচাইয়ের সীমা শেষ করেছেন। অনুগ্রহ করে আগামীকাল আবার চেষ্টা করুন।",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+        const apiResult: ApiPlagiarismResult = await checkPlagiarism({ text: inputText });
+        updateApiUsage();
+
+        const transformedResult: PlagiarismResult = {
+            highlightedContent: apiResult.sentences.map(s => ({ text: s.text, isDuplicate: s.isPlagiarized })),
+            uniquePercentage: apiResult.uniquePercentage,
+            duplicatePercentage: apiResult.plagiarizedPercentage,
+        };
+        setResult(transformedResult);
+
+    } catch (error) {
+        console.error("API plagiarism check failed:", error);
+        toast({
+            title: "একটি সমস্যা হয়েছে",
+            description: "অনলাইন যাচাই করার সময় একটি সমস্যা হয়েছে। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।",
+            variant: "destructive",
+        });
+    }
+  }
+
   const handleCheck = async () => {
-    if (text.trim().length < 10) {
+    if (text.trim().length < 20) {
         toast({
             title: "ত্রুটি",
-            description: "অনুগ্রহ করে যাচাই করার জন্য যথেষ্ট লেখা দিন।",
+            description: "অনুগ্রহ করে যাচাই করার জন্য যথেষ্ট লেখা দিন (কমপক্ষে ২০ অক্ষর)।",
             variant: "destructive",
         });
         return;
     }
 
-    if (isApiMode) {
-      toast({
-        title: "শীঘ্রই আসছে!",
-        description: "অনলাইন মোড বর্তমানে উপলব্ধ নয়। আমরা এটি নিয়ে কাজ করছি।",
-      });
-      return;
-    }
-
     setIsLoading(true);
     setResult(null);
 
-    // Offline check logic
-    setTimeout(() => {
-      const checkResult = handleOfflineCheck(text);
-      setResult(checkResult);
-      setIsLoading(false);
-    }, 500);
+    if (isApiMode) {
+        await handleApiCheck(text);
+    } else {
+        // Offline check logic
+        setTimeout(() => {
+          const checkResult = handleOfflineCheck(text);
+          setResult(checkResult);
+        }, 500);
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -124,9 +165,9 @@ export default function AiPlagiarismChecker() {
        {isApiMode && (
          <Alert>
             <Terminal className="h-4 w-4" />
-            <AlertTitle>অনলাইন মোড</AlertTitle>
+            <AlertTitle>অনলাইন মোড (AI Powered)</AlertTitle>
             <AlertDescription>
-              এই ফিচারটি শীঘ্রই আসছে। এটি আরও শক্তিশালী এবং গভীর বিশ্লেষণের জন্য একটি বহিরাগত API ব্যবহার করবে।
+              এই মোডটি শক্তিশালী Gemini AI ব্যবহার করে আপনার লেখার মৌলিকতা ইন্টারনেটের বিশাল তথ্যভান্ডারের সাথে তুলনা করে। দৈনিক ব্যবহারের সীমা: ২ বার।
             </AlertDescription>
           </Alert>
        )}
@@ -165,7 +206,7 @@ export default function AiPlagiarismChecker() {
                     <div className="flex items-center gap-3">
                         <XCircle className="w-8 h-8 text-red-600"/>
                         <div>
-                            <p className="text-sm text-muted-foreground">পুনরাবৃত্তির হার</p>
+                            <p className="text-sm text-muted-foreground">{isApiMode ? 'সম্ভাব্য প্লেজিয়ারিজম' : 'পুনরাবৃত্তির হার'}</p>
                             <p className="text-2xl font-bold">{result.duplicatePercentage.toLocaleString('bn-BD')}%</p>
                         </div>
                     </div>
