@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,7 +16,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Separator } from '@/components/ui/separator';
-import GiscusComments from '@/components/GiscusComments';
+// import GiscusComments from '@/components/GiscusComments';
 
 type BlogPostPageProps = {
   params: {
@@ -301,6 +302,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </>
       )}
 
+      {/* 
       <Separator className='my-12' />
       <section>
         <h2 className="text-2xl font-bold font-headline flex items-center gap-3 mb-4">
@@ -309,6 +311,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         </h2>
         <GiscusComments />
       </section>
+      */}
 
     </div>
   );
