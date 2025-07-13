@@ -41,6 +41,7 @@ export default function ImageToTextOcrConverter() {
     
     return () => {
         workerRef.current?.terminate();
+        workerRef.current = null;
     }
   }, []);
 
