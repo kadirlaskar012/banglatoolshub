@@ -40,7 +40,7 @@ export default function LoginPage() {
       router.push('/admin');
     } catch (err) {
       setError('Invalid email or password. Please try again.');
-      console.error(err);
+      // The error is handled by setting the state above, no need to log it to the console.
     } finally {
       setIsLoading(false);
     }
