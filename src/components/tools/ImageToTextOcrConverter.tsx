@@ -4,7 +4,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Copy, X, Loader, Languages, FileText, Image as ImageIcon, Wand2 } from 'lucide-react';
+import { Upload, Copy, X, Loader, Wand2, Image as ImageIcon } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from '@/components/ui/progress';
 import { createWorker } from 'tesseract.js';
@@ -21,7 +21,6 @@ export default function ImageToTextOcrConverter() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [language, setLanguage] = useState('ben+eng'); // Default to Bengali + English
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const workerRef = useRef<Tesseract.Worker | null>(null);
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,22 +71,22 @@ export default function ImageToTextOcrConverter() {
     setText('');
     setProgress(0);
     
+    const worker = await createWorker();
+    
     try {
-      const worker = await createWorker({
-        logger: m => {
-          if (m.status === 'recognizing text') {
-              setStatus('লেখা শনাক্ত করা হচ্ছে...');
-              setProgress(Math.round(m.progress * 100));
-          } else {
-              setStatus(m.status);
-          }
-        },
-      });
-
       await worker.loadLanguage(language);
       await worker.initialize(language);
       setStatus('লেখা শনাক্ত করা হচ্ছে...');
-      const { data: { text: extractedText } } = await worker.recognize(selectedFile);
+      const { data: { text: extractedText } } = await worker.recognize(selectedFile, {}, {
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            setStatus('লেখা শনাক্ত করা হচ্ছে...');
+            setProgress(Math.round(m.progress * 100));
+          } else {
+            setStatus(m.status);
+          }
+        }
+      });
       setText(extractedText);
       toast({
         title: "সফল!",
@@ -183,7 +182,7 @@ export default function ImageToTextOcrConverter() {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
             <Label className="font-medium flex items-center gap-2">
-                <FileText className="w-5 h-5"/>
+                <ImageIcon className="w-5 h-5"/>
                 শনাক্ত করা টেক্সট
             </Label>
             <div className="flex gap-2">
