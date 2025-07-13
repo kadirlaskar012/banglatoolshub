@@ -193,37 +193,36 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             />
         )}
 
-        <div className='lg:grid lg:grid-cols-4 lg:gap-8'>
-          <div className='lg:col-span-3'>
-            <div 
-                className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
-                dangerouslySetInnerHTML={{ __html: post.contentHtml }}
-            />
-          </div>
-          <aside className="lg:col-span-1 mt-8 lg:mt-0">
-             {headings.length > 0 && (
-                <Card className="sticky top-24">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3 font-headline text-lg">
-                            <List className="w-5 h-5 text-primary"/>
-                            সূচিপত্র
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ul className="space-y-2 text-sm">
-                            {headings.map(heading => (
-                                <li key={heading.id}>
-                                    <a href={`#${heading.id}`} className="hover:underline hover:text-primary font-medium text-muted-foreground">
-                                        {heading.text}
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </CardContent>
-                </Card>
-            )}
-          </aside>
-        </div>
+        {headings.length > 0 && (
+          <Card className="my-8 bg-muted/50">
+            <Accordion type="single" collapsible>
+              <AccordionItem value="toc" className="border-b-0">
+                <AccordionTrigger className="px-6 py-4 text-lg font-headline hover:no-underline">
+                  <div className="flex items-center gap-3">
+                    <List className="w-5 h-5 text-primary"/>
+                    সূচিপত্র (Table of Contents)
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-4">
+                  <ul className="space-y-2 text-base list-decimal list-inside text-primary">
+                    {headings.map(heading => (
+                        <li key={heading.id}>
+                          <a href={`#${heading.id}`} className="font-medium text-foreground hover:underline hover:text-primary">
+                              {heading.text}
+                          </a>
+                        </li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </Card>
+        )}
+
+        <div 
+            className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+        />
 
       </article>
 
