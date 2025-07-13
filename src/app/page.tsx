@@ -26,21 +26,6 @@ const faqItems = [
 const HomeSchemaMarkup = () => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
 
-  const websiteSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Bangla Tools HUB',
-    url: baseUrl,
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: {
-        '@type': 'EntryPoint',
-        urlTemplate: `${baseUrl}/tools?q={search_term_string}`
-      },
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
   const organizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -56,10 +41,6 @@ const HomeSchemaMarkup = () => {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}

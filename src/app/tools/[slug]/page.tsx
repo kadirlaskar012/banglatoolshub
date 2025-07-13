@@ -78,18 +78,6 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
 const ToolSchemaMarkup = ({ tool }: { tool: Tool }) => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
 
-    const websiteSchema = {
-        '@context': 'https://schema.org',
-        '@type': 'WebSite',
-        name: 'Bangla Tools HUB',
-        url: baseUrl,
-        potentialAction: {
-            '@type': 'SearchAction',
-            target: `${baseUrl}/tools?q={search_term_string}`,
-            'query-input': 'required name=search_term_string',
-        },
-    };
-
     const breadcrumbSchema = {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
@@ -173,10 +161,6 @@ const ToolSchemaMarkup = ({ tool }: { tool: Tool }) => {
   
     return (
       <>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
          <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
@@ -218,7 +202,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const ToolComponent = ToolComponents[tool.slug] || null;
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div>
       <ToolSchemaMarkup tool={tool} />
       <Breadcrumbs
         items={[

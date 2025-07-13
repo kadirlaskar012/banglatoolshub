@@ -176,7 +176,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const headings = getHeadings(post.contentHtml);
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div>
       <BlogSchemaMarkup post={post} />
       <Breadcrumbs
         items={[
