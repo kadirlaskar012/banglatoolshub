@@ -4,7 +4,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Copy, X, Loader, Languages, FileText, Image as ImageIcon } from 'lucide-react';
+import { Upload, Copy, X, Loader, Languages, FileText, Image as ImageIcon, Wand2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from '@/components/ui/progress';
 import { createWorker } from 'tesseract.js';
@@ -17,6 +17,7 @@ export default function ImageToTextOcrConverter() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('ছবি নির্বাচন করুন...');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [language, setLanguage] = useState('ben+eng'); // Default to Bengali + English
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -44,36 +45,47 @@ export default function ImageToTextOcrConverter() {
   };
   
   const processFile = (file: File) => {
+    setSelectedFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result as string);
-      handleConvert(file);
     };
     reader.readAsDataURL(file);
+    setText('');
+    setProgress(0);
+    setStatus('ছবি প্রস্তুত। রূপান্তর করতে বাটনে ক্লিক করুন।');
   };
 
-  const handleConvert = useCallback(async (file: File) => {
+  const handleConvert = useCallback(async () => {
+    if (!selectedFile) {
+        toast({
+            title: "কোনো ছবি নেই",
+            description: "অনুগ্রহ করে প্রথমে একটি ছবি নির্বাচন করুন।",
+            variant: "destructive"
+        });
+        return;
+    }
+
     setIsLoading(true);
     setText('');
     setProgress(0);
-    setStatus('ওয়ার্কার লোড হচ্ছে...');
-
+    
     const worker = await createWorker({
-      logger: m => {
-        if (m.status === 'recognizing text') {
-            setStatus('লেখা শনাক্ত করা হচ্ছে...');
-            setProgress(Math.round(m.progress * 100));
-        } else {
-            setStatus(m.status);
-        }
-      },
+        logger: m => {
+            if (m.status === 'recognizing text') {
+                setStatus('লেখা শনাক্ত করা হচ্ছে...');
+                setProgress(Math.round(m.progress * 100));
+            } else {
+                setStatus(m.status);
+            }
+        },
     });
 
     try {
       await worker.loadLanguage(language);
       await worker.initialize(language);
       setStatus('লেখা শনাক্ত করা হচ্ছে...');
-      const { data: { text: extractedText } } = await worker.recognize(file);
+      const { data: { text: extractedText } } = await worker.recognize(selectedFile);
       setText(extractedText);
       toast({
         title: "সফল!",
@@ -90,8 +102,9 @@ export default function ImageToTextOcrConverter() {
     } finally {
       setIsLoading(false);
       setProgress(100);
+      setStatus('প্রক্রিয়া সম্পন্ন হয়েছে।');
     }
-  }, [language, toast]);
+  }, [language, selectedFile, toast]);
 
   const copyToClipboard = () => {
     if(!text) return;
@@ -105,6 +118,7 @@ export default function ImageToTextOcrConverter() {
   const clearAll = () => {
     setText('');
     setImagePreview(null);
+    setSelectedFile(null);
     setProgress(0);
     setStatus('ছবি নির্বাচন করুন...');
     if(fileInputRef.current) {
@@ -138,9 +152,9 @@ export default function ImageToTextOcrConverter() {
                 </div>
             )}
         </Card>
-        <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-                <label className="text-sm font-medium mb-2 block">লেখার ভাষা</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <Label className="text-sm font-medium mb-2 block">লেখার ভাষা</Label>
                 <Select value={language} onValueChange={setLanguage} disabled={isLoading}>
                     <SelectTrigger>
                         <SelectValue placeholder="ভাষা নির্বাচন করুন" />
@@ -152,13 +166,17 @@ export default function ImageToTextOcrConverter() {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="flex-1 flex items-end">
-                <Button onClick={() => fileInputRef.current?.click()} className="w-full" disabled={isLoading}>
+            <div className="flex items-end">
+                <Button onClick={() => fileInputRef.current?.click()} className="w-full" variant="outline" disabled={isLoading}>
                     <ImageIcon className="mr-2 h-4 w-4" />
                     {imagePreview ? "অন্য ছবি বাছুন" : "ছবি বাছুন"}
                 </Button>
             </div>
         </div>
+         <Button onClick={handleConvert} className="w-full text-lg py-6" disabled={isLoading || !selectedFile}>
+            <Wand2 className="mr-2 h-5 w-5" />
+            {isLoading ? 'রূপান্তর হচ্ছে...' : 'টেক্সটে রূপান্তর করুন'}
+        </Button>
       </div>
       <div className="space-y-4">
         <div className="flex justify-between items-center">
@@ -176,7 +194,7 @@ export default function ImageToTextOcrConverter() {
             </div>
         </div>
         <Textarea
-          placeholder={!isLoading ? "এখানে আপনার ছবির লেখাটি আসবে..." : ""}
+          placeholder={status}
           value={text}
           readOnly
           className="min-h-[300px] bg-muted/30 text-base"
