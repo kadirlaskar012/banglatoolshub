@@ -5,8 +5,9 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '../ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Share2 } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 interface AgeResult {
   years: number;
@@ -31,22 +32,23 @@ export default function AgeCalculator() {
   const [dob, setDob] = useState<string>('');
   const [result, setResult] = useState<AgeResult | null>(null);
   const [totalResult, setTotalResult] = useState<TotalResult | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (result) {
       timer = setInterval(() => {
-        calculateAge(dob);
+        calculateAge(dob, false);
       }, 1000);
     }
     return () => clearInterval(timer);
   }, [result, dob]);
 
-  const calculateAge = (dateString: string) => {
+  const calculateAge = (dateString: string, showAlerts = true) => {
     if (!dateString) {
       setResult(null);
       setTotalResult(null);
-      alert("দয়া করে আপনার জন্ম তারিখ দিন!");
+      if (showAlerts) alert("দয়া করে আপনার জন্ম তারিখ দিন!");
       return;
     }
 
@@ -56,7 +58,7 @@ export default function AgeCalculator() {
     if (birthDate > now) {
         setResult(null);
         setTotalResult(null);
-        alert("জন্ম তারিখ আজকের তারিখের পরে হতে পারে না।");
+        if (showAlerts) alert("জন্ম তারিখ আজকের তারিখের পরে হতে পারে না।");
         return;
     }
 
@@ -98,6 +100,40 @@ export default function AgeCalculator() {
         totalSeconds
     });
   };
+
+  const handleShare = async (textToShare: string, title: string) => {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: title,
+                text: textToShare,
+                url: window.location.href,
+            });
+        } catch (error) {
+            console.error('শেয়ার করতে সমস্যা হয়েছে:', error);
+        }
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        navigator.clipboard.writeText(textToShare);
+        toast({
+            title: "কপি হয়েছে!",
+            description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
+        });
+    }
+  };
+
+  const sharePreciseAge = () => {
+    if (!result) return;
+    const shareText = `আমার সঠিক বয়স: ${result.years} বছর, ${result.months} মাস, ${result.days} দিন, ${result.hours} ঘণ্টা, ${result.minutes} মিনিট, এবং ${result.seconds} সেকেন্ড! আপনিও আপনার বয়স জানুন:`;
+    handleShare(shareText, 'আমার সঠিক বয়স');
+  };
+
+  const shareTotalAge = () => {
+      if (!totalResult) return;
+      const shareText = `আমি পৃথিবীতে মোট ${totalResult.totalDays.toLocaleString('bn-BD')} দিন কাটিয়েছি! আপনিও আপনার জীবনের মোট সময়কাল জানুন:`;
+      handleShare(shareText, 'আমার জীবনের মোট সময়');
+  };
+
 
   const todayString = new Date().toISOString().split('T')[0];
 
@@ -152,6 +188,12 @@ export default function AgeCalculator() {
                     </div>
                 </div>
             </CardContent>
+            <CardFooter className="justify-center">
+                <Button onClick={sharePreciseAge} variant="outline">
+                    <Share2 className="mr-2 h-4 w-4" />
+                    ফলাফল শেয়ার করুন
+                </Button>
+            </CardFooter>
         </Card>
       )}
 
@@ -186,6 +228,12 @@ export default function AgeCalculator() {
                     <p className="text-xs text-muted-foreground">সেকেন্ড</p>
                 </div>
             </CardContent>
+             <CardFooter className="justify-center">
+                <Button onClick={shareTotalAge} variant="outline">
+                    <Share2 className="mr-2 h-4 w-4" />
+                    ফলাফল শেয়ার করুন
+                </Button>
+            </CardFooter>
         </Card>
       )}
     </div>
