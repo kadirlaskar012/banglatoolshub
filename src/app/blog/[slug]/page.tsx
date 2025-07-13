@@ -195,7 +195,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
         {headings.length > 0 && (
           <Card className="my-8 bg-muted/50">
-            <Accordion type="single" collapsible>
+            <Accordion type="single" collapsible defaultValue="toc">
               <AccordionItem value="toc" className="border-b-0">
                 <AccordionTrigger className="px-6 py-4 text-lg font-headline hover:no-underline">
                   <div className="flex items-center gap-3">
