@@ -4,8 +4,6 @@
 
 ## লেখার জন্য বাকি থাকা টুলস:
 
-- [ ] বয়স ক্যালকুলেটর (`age-calculator`)
-- [ ] এআই প্লেজিয়ারিজম চেকার (`ai-plagiarism-checker`)
 - [ ] জিএসটি/ভ্যাট ক্যালকুলেটর (`gst-vat-calculator`)
 - [ ] ছবি থেকে টেক্সট (OCR) (`image-to-text-ocr-converter`)
 - [ ] বিনিয়োগ রিটার্ন ক্যালকুলেটর (`investment-return-calculator`)
