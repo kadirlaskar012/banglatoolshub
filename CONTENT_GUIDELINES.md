@@ -39,6 +39,9 @@ This document outlines the strategy for creating high-quality, SEO-optimized con
     *   **Headings:** The primary keyword and important secondary keywords must appear in H2, H3, etc.
     *   **Body Content:** Keywords should be distributed naturally throughout the article.
     *   **Bolded Keywords:** Key keywords within the text should be bolded to make them stand out to both users and search engines.
+*   **Keyword Density:** To maintain a natural flow and avoid keyword stuffing, adhere to the following guidelines:
+    *   **Focus Keyword:** Use the main keyword **6–8 times** throughout the content.
+    *   **Secondary Keywords:** Use a mix of 8–12 different secondary keywords. Each can be used 1-2 times.
 
 ### 2. Meta Tags (in Frontmatter)
 *   **`metaTitle`:** The page title. Should be compelling and include the primary keyword.
