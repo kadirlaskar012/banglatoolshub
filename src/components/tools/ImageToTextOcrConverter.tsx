@@ -56,38 +56,39 @@ export default function ImageToTextOcrConverter() {
     setIsLoading(true);
     setText('');
     setProgress(0);
+    setStatus('ওয়ার্কার লোড হচ্ছে...');
 
     const worker = await createWorker({
-        logger: (m) => {
-            if (m.status === 'recognizing text') {
-              setStatus('লেখা শনাক্ত করা হচ্ছে...');
-              setProgress(Math.round(m.progress * 100));
-            } else {
-                setStatus(m.status);
-            }
-          },
+      logger: (m) => {
+        if (m.status === 'recognizing text') {
+          setStatus('লেখা শনাক্ত করা হচ্ছে...');
+          setProgress(Math.round(m.progress * 100));
+        } else {
+          setStatus(m.status);
+        }
+      },
     });
 
     try {
-        await worker.loadLanguage(language);
-        await worker.initialize(language);
-        const { data: { text: extractedText } } = await worker.recognize(file);
-        setText(extractedText);
-        toast({
-            title: "সফল!",
-            description: "ছবি থেকে সফলভাবে লেখা বের করা হয়েছে।",
-        });
-        await worker.terminate();
+      await worker.loadLanguage(language);
+      await worker.initialize(language);
+      const { data: { text: extractedText } } = await worker.recognize(file);
+      setText(extractedText);
+      toast({
+        title: "সফল!",
+        description: "ছবি থেকে সফলভাবে লেখা বের করা হয়েছে।",
+      });
+      await worker.terminate();
     } catch (error) {
-        console.error(error);
-        toast({
-            title: "একটি সমস্যা হয়েছে",
-            description: "লেখা শনাক্ত করার সময় একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
-            variant: "destructive",
-        });
+      console.error(error);
+      toast({
+        title: "একটি সমস্যা হয়েছে",
+        description: "লেখা শনাক্ত করার সময় একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
+        variant: "destructive",
+      });
     } finally {
-        setIsLoading(false);
-        setProgress(100);
+      setIsLoading(false);
+      setProgress(100);
     }
   }, [language, toast]);
 
