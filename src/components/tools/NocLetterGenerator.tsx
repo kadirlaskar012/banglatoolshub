@@ -10,12 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, Copy, Printer, RotateCcw, Upload, Heading } from 'lucide-react';
+import { Download, Copy, Printer, RotateCcw } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { bn, enUS } from 'date-fns/locale';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+import { saveAs } from 'file-saver';
+import { asBlob } from 'html-to-docx';
+
 
 // Translations and Templates
 const translations = {
@@ -95,27 +99,14 @@ const translations = {
     }
 };
 
-const nocTemplates = {
-    bn: {
-        job: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: অনাপত্তিপত্র (No Objection Certificate) প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাইতেছে যে, ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}, আমাদের প্রতিষ্ঠানে একজন ${data.designation || `[${t.designation}]`} হিসেবে কর্মরত আছেন।\n\nতার ${data.purpose || `[${t.purpose}]`} এর জন্য আমাদের পক্ষ থেকে কোনো আপত্তি নেই। আমরা তার সার্বিক সাফল্য কামনা করি।\n\nবিনীত,\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`
-    },
-    en: {
-        job: (data: any, t: any) => `To,\nThe ${data.authorityName || `[${t.authorityName}]`}\n\nSubject: No Objection Certificate (NOC).\n\nDear Sir/Madam,\nThis is to certify that ${data.name || `[${t.name}]`}, Son/Daughter of ${data.fathersName || `[${t.fathersName}]`}, is a valued employee at our organization, serving as a ${data.designation || `[${t.designation}]`}.\n\nWe have no objection to him/her for the purpose of ${data.purpose || `[${t.purpose}]`}. We wish him/her all the best for their future endeavors.\n\nSincerely,\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`
-    }
-};
-
 const allTemplates = {
     bn: {
-        ...nocTemplates.bn,
-        travel: (data: any, t: any) => `Template for travel in Bengali...`,
-        vehicle: (data: any, t: any) => `Template for vehicle in Bengali...`,
+        job: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: অনাপত্তিপত্র (No Objection Certificate) প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাইতেছে যে, ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}, আমাদের প্রতিষ্ঠানে একজন ${data.designation || `[${t.designation}]`} হিসেবে কর্মরত আছেন।\n\nতার ${data.purpose || `[${t.purpose}]`} এর জন্য আমাদের পক্ষ থেকে কোনো আপত্তি নেই। আমরা তার সার্বিক সাফল্য কামনা করি।\n\nবিনীত,\n\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`
     },
     en: {
-        ...nocTemplates.en,
-        travel: (data: any, t: any) => `Template for travel in English...`,
-        vehicle: (data: any, t: any) => `Template for vehicle in English...`,
+        job: (data: any, t: any) => `To,\nThe ${data.authorityName || `[${t.authorityName}]`}\n\nSubject: No Objection Certificate (NOC).\n\nDear Sir/Madam,\nThis is to certify that ${data.name || `[${t.name}]`}, Son/Daughter of ${data.fathersName || `[${t.fathersName}]`}, is a valued employee at our organization, serving as a ${data.designation || `[${t.designation}]`}.\n\nWe have no objection to him/her for the purpose of ${data.purpose || `[${t.purpose}]`}. We wish him/her all the best for their future endeavors.\n\nSincerely,\n\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`
     }
-}
+};
 
 const FormSchema = z.object({
     lang: z.enum(['bn', 'en']),
@@ -143,9 +134,9 @@ export default function NocLetterGenerator() {
 
     const {
         control,
-        handleSubmit,
         watch,
         reset,
+        setValue,
         formState: { errors },
     } = useForm<FormData>({
         resolver: zodResolver(FormSchema),
@@ -193,7 +184,7 @@ export default function NocLetterGenerator() {
 
     const handleCopy = () => {
         if (letterPreviewRef.current) {
-            const letterText = `${t.issueDate}: ${issueDate}\n\n${letterPreviewRef.current.innerText}`;
+            const letterText = letterPreviewRef.current.innerText;
             navigator.clipboard.writeText(letterText);
             toast({
                 title: t.copiedSuccess,
@@ -201,12 +192,71 @@ export default function NocLetterGenerator() {
         }
     };
     
-    const handleDownloadDoc = () => {
-       toast({ title: "Coming Soon!", description: "DOC download feature will be available soon." });
+    const handleDownloadDoc = async () => {
+       if (letterPreviewRef.current) {
+           const htmlString = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: 'Times New Roman', Times, serif;
+                    font-size: 12pt;
+                    white-space: pre-wrap;
+                }
+            </style>
+            </head>
+            <body>
+                ${letterPreviewRef.current.innerHTML.replace(/\n/g, '<br />')}
+            </body>
+            </html>`;
+           
+           try {
+                const blob = await asBlob(htmlString);
+                saveAs(blob, 'NOC-Letter.docx');
+           } catch(error) {
+               console.error("Error generating DOCX:", error);
+               toast({ title: "ডাউনলোড ব্যর্থ হয়েছে", description: "DOCX ফাইল তৈরি করার সময় একটি সমস্যা হয়েছে।", variant: "destructive" });
+           }
+       }
     };
     
     const handleDownloadPdf = () => {
-        toast({ title: "Coming Soon!", description: "PDF download feature will be available soon." });
+        const input = letterPreviewRef.current;
+        if (input) {
+            html2canvas(input, {
+                scale: 2, // Higher scale for better quality
+                useCORS: true, 
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({
+                    orientation: 'p',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const ratio = canvasWidth / canvasHeight;
+                const width = pdfWidth - 20; // with some margin
+                const height = width / ratio;
+
+                let finalHeight = height;
+                if(height > pdfHeight - 20) {
+                  finalHeight = pdfHeight - 20;
+                }
+                
+                pdf.addImage(imgData, 'PNG', 10, 10, width, finalHeight);
+                pdf.save("NOC-Letter.pdf");
+            }).catch(error => {
+                console.error("Error generating PDF:", error);
+                toast({ title: "ডাউনলোড ব্যর্থ হয়েছে", description: "PDF ফাইল তৈরি করার সময় একটি সমস্যা হয়েছে।", variant: "destructive" });
+            });
+        }
     };
     
     const handlePrint = () => {
@@ -215,9 +265,8 @@ export default function NocLetterGenerator() {
             const printWindow = window.open('', '', 'height=600,width=800');
             if (printWindow) {
                 printWindow.document.write('<html><head><title>Print NOC</title>');
-                printWindow.document.write('<style> body { font-family: sans-serif; white-space: pre-wrap; } </style>');
+                printWindow.document.write('<style> body { font-family: sans-serif; white-space: pre-wrap; padding: 20px; } </style>');
                 printWindow.document.write('</head><body>');
-                printWindow.document.write(`<p>${t.issueDate}: ${issueDate}</p>`);
                 printWindow.document.write(previewElement.innerHTML.replace(/\n/g, '<br>'));
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
@@ -246,11 +295,12 @@ export default function NocLetterGenerator() {
                                     control={control}
                                     render={({ field }) => (
                                         <Tabs
-                                            defaultValue={field.value}
+                                            value={field.value}
                                             onValueChange={(value) => {
                                                 const newLang = value as 'bn' | 'en';
                                                 field.onChange(newLang);
                                                 setLang(newLang);
+                                                setValue('lang', newLang);
                                             }}
                                             className="w-full mt-1"
                                         >
@@ -332,9 +382,9 @@ export default function NocLetterGenerator() {
                         <CardTitle>{t.preview}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="p-6 border rounded-md min-h-[400px] bg-background">
-                            <p className="mb-4">{t.issueDate}: {issueDate}</p>
-                            <div ref={letterPreviewRef} className="whitespace-pre-wrap text-sm">{generatedLetter}</div>
+                        <div ref={letterPreviewRef} className="p-6 border rounded-md min-h-[400px] bg-background">
+                            <p className="mb-4 whitespace-pre-wrap">{t.issueDate}: {issueDate}</p>
+                            <div className="whitespace-pre-wrap text-sm">{generatedLetter}</div>
                         </div>
                     </CardContent>
                 </Card>
@@ -354,3 +404,5 @@ export default function NocLetterGenerator() {
         </div>
     );
 }
+
+    
