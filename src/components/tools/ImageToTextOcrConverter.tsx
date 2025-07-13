@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Copy, X, Loader, Wand2, Image as ImageIcon } from 'lucide-react';
@@ -24,23 +24,26 @@ export default function ImageToTextOcrConverter() {
   const workerRef = useRef<Worker | null>(null);
   const { toast } = useToast();
 
-  const initializeWorker = useCallback(async () => {
-    if (workerRef.current) {
-        await workerRef.current.terminate();
-        workerRef.current = null;
+  // Initialize worker on component mount
+  useEffect(() => {
+    const initializeWorker = async () => {
+        const worker = await createWorker({
+            logger: m => {
+                if (m.status === 'recognizing text') {
+                    setProgress(Math.round(m.progress * 100));
+                    setStatus(`লেখা শনাক্ত করা হচ্ছে...`);
+                }
+            }
+        });
+        workerRef.current = worker;
+    };
+    initializeWorker();
+    
+    return () => {
+        workerRef.current?.terminate();
     }
-    const worker = await createWorker({
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          setProgress(Math.round(m.progress * 100));
-          setStatus(`লেখা শনাক্ত করা হচ্ছে... (${Math.round(m.progress * 100)}%)`);
-        } else {
-            setStatus(m.status);
-        }
-      },
-    });
-    workerRef.current = worker;
   }, []);
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -85,18 +88,27 @@ export default function ImageToTextOcrConverter() {
         });
         return;
     }
+    
+    if (!workerRef.current) {
+        toast({
+            title: "ওয়ার্কার প্রস্তুত নয়",
+            description: "OCR ইঞ্জিন প্রস্তুত নয়, অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।",
+            variant: "destructive"
+        });
+        return;
+    }
 
     setIsLoading(true);
     setText('');
     setProgress(0);
+    setStatus('ইঞ্জিন লোড হচ্ছে...');
     
     try {
-      await initializeWorker();
       const worker = workerRef.current;
-      if (!worker) throw new Error("Worker not initialized");
-
       await worker.loadLanguage(language);
       await worker.initialize(language);
+      setStatus('ভাষা লোড হয়েছে।');
+
       const { data: { text: extractedText } } = await worker.recognize(selectedFile);
       setText(extractedText);
       toast({
@@ -114,10 +126,6 @@ export default function ImageToTextOcrConverter() {
       setIsLoading(false);
       setProgress(100);
       setStatus('প্রক্রিয়া সম্পন্ন হয়েছে।');
-      if (workerRef.current) {
-          await workerRef.current.terminate();
-          workerRef.current = null;
-      }
     }
   };
 
@@ -190,7 +198,7 @@ export default function ImageToTextOcrConverter() {
         </div>
          <Button onClick={handleConvert} className="w-full text-lg py-6" disabled={isLoading || !selectedFile}>
             <Wand2 className="mr-2 h-5 w-5" />
-            {isLoading ? 'রূপান্তর হচ্ছে...' : 'টেক্সটে রূপান্তর করুন'}
+            {isLoading ? status : 'টেক্সটে রূপান্তর করুন'}
         </Button>
       </div>
       <div className="space-y-4">
