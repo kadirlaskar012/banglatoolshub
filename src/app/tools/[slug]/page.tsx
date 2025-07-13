@@ -25,6 +25,7 @@ const ToolComponents: { [key: string]: React.ComponentType<any> } = {
   'ai-plagiarism-checker': dynamic(() => import('@/components/tools/AiPlagiarismChecker'), { loading: () => <ToolSkeleton /> }),
   'gst-vat-calculator': dynamic(() => import('@/components/tools/GstVatCalculator'), { loading: () => <ToolSkeleton /> }),
   'investment-return-calculator': dynamic(() => import('@/components/tools/InvestmentReturnCalculator'), { loading: () => <ToolSkeleton /> }),
+  'noc-letter-generator': dynamic(() => import('@/components/tools/NocLetterGenerator'), { loading: () => <ToolSkeleton /> }),
 };
 
 const ToolSkeleton = () => (

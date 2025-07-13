@@ -5,6 +5,7 @@ import {
   TrendingUp,
   CalendarDays,
   Receipt,
+  FileText,
   type LucideProps,
 } from 'lucide-react';
 
@@ -32,6 +33,7 @@ export const Icons = {
   'trending-up': TrendingUp,
   'calendar-days': CalendarDays,
   receipt: Receipt,
+  'file-text': FileText,
 };
 
 export const iconMap = {
@@ -40,4 +42,5 @@ export const iconMap = {
   'trending-up': Icons['trending-up'],
   'calendar-days': Icons['calendar-days'],
   receipt: Icons.receipt,
+  'file-text': Icons['file-text'],
 };
