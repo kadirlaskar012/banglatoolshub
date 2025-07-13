@@ -9,7 +9,6 @@ export interface Tool {
   longDescription: string;
   icon: keyof typeof Icons;
   category: string;
-  content: string; // The primary content of the tool page, used for AI suggestions
   metaTitle?: string;
   metaDescription?: string;
 }
@@ -19,10 +18,10 @@ export interface BlogPost {
   slug: string;
   title: string;
   excerpt: string;
-  content: string;
+  contentHtml: string;
   author: string;
   publishedAt: string; // Should be in ISO format
-  imageUrl: string;
+  imageUrl?: string;
   relatedTools?: string[]; // array of tool slugs
   metaTitle?: string;
   metaDescription?: string;

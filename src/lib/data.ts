@@ -1,103 +1,100 @@
+import fs from 'fs';
+import path from 'path';
+import matter from 'gray-matter';
+import { remark } from 'remark';
+import html from 'remark-html';
 import type { Tool, BlogPost } from './types';
-import { db } from './firebase';
-import { collection, getDocs, getDoc, doc, query, where } from 'firebase/firestore';
-import { Icons } from '@/components/icons';
+import { Icons, iconMap } from '@/components/icons';
 
-// Helper function to map Firestore document data to our types
-function mapDocToTool(docSnapshot: any): Tool {
-    const data = docSnapshot.data();
-    return {
-        id: docSnapshot.id,
-        slug: data.slug,
-        name: data.name,
-        description: data.description,
-        longDescription: data.longDescription,
-        icon: data.icon as keyof typeof Icons || 'pen',
-        category: data.category,
-        content: data.content,
-        metaTitle: data.metaTitle,
-        metaDescription: data.metaDescription,
-    };
-}
+const toolsDirectory = path.join(process.cwd(), 'src/content/tools');
+const blogDirectory = path.join(process.cwd(), 'src/content/blog');
 
-function mapDocToBlogPost(docSnapshot: any): BlogPost {
-    const data = docSnapshot.data();
+// Helper function to read and parse a markdown file
+async function parseMarkdownFile(fullPath: string) {
+    const fileContents = fs.readFileSync(fullPath, 'utf8');
+    const matterResult = matter(fileContents);
+
+    const processedContent = await remark()
+        .use(html)
+        .process(matterResult.content);
+    const contentHtml = processedContent.toString();
+
     return {
-        id: docSnapshot.id,
-        slug: data.slug,
-        title: data.title,
-        excerpt: data.excerpt,
-        content: data.content,
-        author: data.author,
-        publishedAt: data.publishedAt, // Assuming it's stored as an ISO string
-        imageUrl: data.imageUrl,
-        relatedTools: data.relatedTools || [],
-        metaTitle: data.metaTitle,
-        metaDescription: data.metaDescription,
+        contentHtml,
+        ...matterResult.data,
     };
 }
 
 
-export const getTools = async (): Promise<Tool[]> => {
-    try {
-        const toolsCollection = collection(db, 'tools');
-        const toolSnapshot = await getDocs(toolsCollection);
-        return toolSnapshot.docs.map(mapDocToTool);
-    } catch (error) {
-        console.error("Error fetching tools:", error);
-        return [];
-    }
-};
+// --- TOOLS ---
 
-export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
-    try {
-        const q = query(collection(db, "tools"), where("slug", "==", slug));
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-            return null;
-        }
-        return mapDocToTool(querySnapshot.docs[0]);
-    } catch (error) {
-        console.error("Error fetching tool by slug:", error);
+export async function getTools(): Promise<Tool[]> {
+    const fileNames = fs.readdirSync(toolsDirectory);
+    const allToolsData = await Promise.all(fileNames.map(async (fileName) => {
+        const slug = fileName.replace(/\.md$/, '');
+        const fullPath = path.join(toolsDirectory, fileName);
+        const data = await parseMarkdownFile(fullPath) as Omit<Tool, 'slug' | 'id'>;
+
+        return {
+            id: slug,
+            slug,
+            ...data,
+        } as Tool;
+    }));
+    return allToolsData;
+}
+
+export async function getToolBySlug(slug: string): Promise<Tool | null> {
+    const fullPath = path.join(toolsDirectory, `${slug}.md`);
+    if (!fs.existsSync(fullPath)) {
         return null;
     }
-};
+    const data = await parseMarkdownFile(fullPath) as Omit<Tool, 'slug' | 'id'>;
+    return {
+        id: slug,
+        slug,
+        ...data,
+    };
+}
 
-export const getToolById = async (id: string): Promise<Tool | null> => {
-    try {
-        const toolDoc = await getDoc(doc(db, "tools", id));
-        if (!toolDoc.exists()) {
-            return null;
+
+// --- BLOG POSTS ---
+
+export async function getBlogPosts(): Promise<BlogPost[]> {
+    const fileNames = fs.readdirSync(blogDirectory);
+    const allPostsData = await Promise.all(fileNames.map(async (fileName) => {
+        const slug = fileName.replace(/\.md$/, '');
+        const fullPath = path.join(blogDirectory, fileName);
+        const fileContents = fs.readFileSync(fullPath, 'utf8');
+        const matterResult = matter(fileContents);
+        
+        return {
+            id: slug,
+            slug,
+            ...matterResult.data,
+        } as BlogPost;
+    }));
+    // Sort posts by date in descending order
+    return allPostsData.sort((a, b) => {
+        if (a.publishedAt < b.publishedAt) {
+            return 1;
+        } else {
+            return -1;
         }
-        return mapDocToTool(toolDoc);
-    } catch (error) {
-        console.error("Error fetching tool by id:", error);
+    });
+}
+
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost & { contentHtml: string } | null> {
+    const fullPath = path.join(blogDirectory, `${slug}.md`);
+     if (!fs.existsSync(fullPath)) {
         return null;
     }
-};
-
-
-export const getBlogPosts = async (): Promise<BlogPost[]> => {
-    try {
-        const postsCollection = collection(db, 'blogPosts');
-        const postSnapshot = await getDocs(postsCollection);
-        return postSnapshot.docs.map(mapDocToBlogPost);
-    } catch (error) {
-        console.error("Error fetching blog posts:", error);
-        return [];
-    }
-};
-
-export const getBlogPostBySlug = async (slug: string): Promise<BlogPost | null> => {
-     try {
-        const q = query(collection(db, "blogPosts"), where("slug", "==", slug));
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-            return null;
-        }
-        return mapDocToBlogPost(querySnapshot.docs[0]);
-    } catch (error) {
-        console.error("Error fetching blog post by slug:", error);
-        return null;
-    }
-};
+    const { contentHtml, ...data } = await parseMarkdownFile(fullPath);
+    
+    return {
+        id: slug,
+        slug,
+        contentHtml,
+        ...(data as Omit<BlogPost, 'id'|'slug'>)
+    };
+}

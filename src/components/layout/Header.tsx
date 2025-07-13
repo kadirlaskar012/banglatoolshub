@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { type NavItem } from '@/lib/types';
+import type { NavItem } from '@/lib/types';
 import { Icons } from '@/components/icons';
 
 const navItems: NavItem[] = [
@@ -74,11 +74,6 @@ export default function Header() {
               </SheetContent>
             </Sheet>
           </div>
-          <nav className="flex items-center">
-            <Button asChild variant="outline">
-              <Link href="/login">Admin Login</Link>
-            </Button>
-          </nav>
         </div>
       </div>
     </header>

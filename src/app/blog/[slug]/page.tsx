@@ -43,7 +43,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   }
 
   const relatedTools: (Tool | null)[] = [];
-  if(post.relatedTools) {
+  if (post.relatedTools) {
     for (const slug of post.relatedTools) {
       const tool = await getToolBySlug(slug);
       relatedTools.push(tool);
@@ -78,19 +78,22 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
         </div>
         
-        <Image
-          src={post.imageUrl}
-          alt={post.title}
-          width={1200}
-          height={600}
-          className="my-8 rounded-lg object-cover aspect-video"
-          priority
-          data-ai-hint="technology abstract"
-        />
+        {post.imageUrl && (
+            <Image
+            src={post.imageUrl}
+            alt={post.title}
+            width={1200}
+            height={600}
+            className="my-8 rounded-lg object-cover aspect-video"
+            priority
+            data-ai-hint="technology abstract"
+            />
+        )}
 
-        <div className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80">
-          {post.content}
-        </div>
+        <div 
+            className="prose prose-lg max-w-none font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+        />
       </article>
 
       {validRelatedTools.length > 0 && (
