@@ -58,14 +58,14 @@ export default function ImageToTextOcrConverter() {
     setProgress(0);
 
     const worker = await createWorker({
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          setStatus('লেখা শনাক্ত করা হচ্ছে...');
-          setProgress(Math.round(m.progress * 100));
-        } else {
-            setStatus(m.status);
-        }
-      },
+        logger: (m) => {
+            if (m.status === 'recognizing text') {
+              setStatus('লেখা শনাক্ত করা হচ্ছে...');
+              setProgress(Math.round(m.progress * 100));
+            } else {
+                setStatus(m.status);
+            }
+          },
     });
 
     try {
@@ -89,7 +89,7 @@ export default function ImageToTextOcrConverter() {
         setIsLoading(false);
         setProgress(100);
     }
-  }, [language]);
+  }, [language, toast]);
 
   const copyToClipboard = () => {
     if(!text) return;
