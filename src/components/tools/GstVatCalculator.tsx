@@ -184,8 +184,8 @@ Bangla Tools HUB থেকে হিসাব করা হয়েছে।
 
         try {
             const canvas = await html2canvas(element, { 
-                backgroundColor: null, // Makes background transparent if the element has no bg color
-                scale: 2 // Increases resolution
+                backgroundColor: null, 
+                scale: 2 
             });
             canvas.toBlob(async (blob) => {
                 if (!blob) {
@@ -195,18 +195,36 @@ Bangla Tools HUB থেকে হিসাব করা হয়েছে।
                 const file = new File([blob], "gst-vat-calculation.png", { type: "image/png" });
                 
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({
-                        title: 'জিএসটি/ভ্যাট হিসাব',
-                        text: 'আমার জিএসটি/ভ্যাট হিসাবের ফলাফল দেখুন।',
-                        files: [file],
-                    });
+                    try {
+                        await navigator.share({
+                            title: 'জিএসটি/ভ্যাট হিসাব',
+                            text: 'আমার জিএসটি/ভ্যাট হিসাবের ফলাফল দেখুন।',
+                            files: [file],
+                        });
+                    } catch (err) {
+                       // This can happen if the user cancels the share sheet
+                       // Fallback to copying text to clipboard
+                        navigator.clipboard.writeText(resultText);
+                        toast({
+                            title: "কপি হয়েছে!",
+                            description: "শেয়ার বাতিল করা হয়েছে। ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
+                        });
+                    }
                 } else {
                     // Fallback for browsers that don't support sharing files
-                    await navigator.share({
-                        title: 'জিএসটি/ভ্যাট হিসাব',
-                        text: resultText,
-                        url: window.location.href,
-                    });
+                    try {
+                        await navigator.share({
+                            title: 'জিএসটি/ভ্যাট হিসাব',
+                            text: resultText,
+                            url: window.location.href,
+                        });
+                    } catch (shareErr) {
+                         navigator.clipboard.writeText(resultText);
+                        toast({
+                            title: "কপি হয়েছে!",
+                            description: "শেয়ার করা সম্ভব হয়নি। ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
+                        });
+                    }
                 }
             });
         } catch (err) {
