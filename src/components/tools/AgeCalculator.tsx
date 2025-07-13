@@ -150,6 +150,14 @@ export default function AgeCalculator() {
         totalSeconds
     });
   };
+  
+  const copyToClipboardFallback = (textToShare: string) => {
+    navigator.clipboard.writeText(textToShare);
+    toast({
+        title: "কপি হয়েছে!",
+        description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
+    });
+  };
 
   const handleShare = async (textToShare: string, title: string) => {
     if (navigator.share) {
@@ -160,15 +168,14 @@ export default function AgeCalculator() {
                 url: window.location.href,
             });
         } catch (error) {
+            // Handle errors like user dismissing the share sheet or permission denial
             console.error('শেয়ার করতে সমস্যা হয়েছে:', error);
+            // Fallback to clipboard if share fails
+            copyToClipboardFallback(textToShare);
         }
     } else {
         // Fallback for browsers that don't support Web Share API
-        navigator.clipboard.writeText(textToShare);
-        toast({
-            title: "কপি হয়েছে!",
-            description: "ফলাফল ক্লিপবোর্ডে কপি করা হয়েছে।",
-        });
+        copyToClipboardFallback(textToShare);
     }
   };
 
