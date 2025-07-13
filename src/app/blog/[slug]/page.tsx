@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getBlogPosts, getBlogPostBySlug, getToolBySlug } from '@/lib/data';
 import type { Metadata } from 'next';
 import Breadcrumbs from '@/components/Breadcrumbs';
-import { Calendar, User, Wrench, List, HelpCircle, BookText } from 'lucide-react';
+import { Calendar, User, Wrench, List, HelpCircle, BookText, MessageSquare } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { BlogPost, Tool } from '@/lib/types';
@@ -15,6 +15,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Separator } from '@/components/ui/separator';
+import GiscusComments from '@/components/GiscusComments';
 
 type BlogPostPageProps = {
   params: {
@@ -299,6 +300,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </aside>
         </>
       )}
+
+      <Separator className='my-12' />
+      <section>
+        <h2 className="text-2xl font-bold font-headline flex items-center gap-3 mb-4">
+            <MessageSquare className="w-7 h-7 text-primary"/>
+            আপনার মতামত দিন
+        </h2>
+        <GiscusComments />
+      </section>
+
     </div>
   );
 }
