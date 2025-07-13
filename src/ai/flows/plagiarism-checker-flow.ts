@@ -17,24 +17,38 @@ const PlagiarismInputSchema = z.object({
 export type PlagiarismInput = z.infer<typeof PlagiarismInputSchema>;
 
 const PlagiarismResultSchema = z.object({
-    uniquePercentage: z.number().describe('The percentage of the text that is unique.'),
-    plagiarizedPercentage: z.number().describe('The percentage of the text that is plagiarized.'),
-    sentences: z.array(z.object({
+  uniquePercentage: z
+    .number()
+    .describe('The percentage of the text that is unique.'),
+  plagiarizedPercentage: z
+    .number()
+    .describe('The percentage of the text that is plagiarized.'),
+  sentences: z
+    .array(
+      z.object({
         text: z.string(),
-        isPlagiarized: z.boolean().describe('Whether this sentence is considered plagiarized.'),
-    })).describe('The list of sentences with plagiarism analysis.'),
+        isPlagiarized: z
+          .boolean()
+          .describe('Whether this sentence is considered plagiarized.'),
+      })
+    )
+    .describe('The list of sentences with plagiarism analysis.'),
 });
 export type PlagiarismResult = z.infer<typeof PlagiarismResultSchema>;
 
-
-export async function checkPlagiarism(input: PlagiarismInput): Promise<PlagiarismResult> {
+export async function checkPlagiarism(
+  input: PlagiarismInput
+): Promise<PlagiarismResult> {
   return plagiarismCheckerFlow(input);
 }
 
 const prompt = ai.definePrompt({
   name: 'plagiarismCheckerPrompt',
   input: {schema: PlagiarismInputSchema},
-  output: {schema: PlagiarismResultSchema},
+  output: {
+    schema: PlagiarismResultSchema,
+    format: 'json',
+  },
   prompt: `You are an expert AI Plagiarism Detector for Bengali text. Your task is to analyze the given text and identify sentences that are likely unoriginal, generic, or potentially plagiarized from common sources on the internet.
 
   Analyze the following text:
@@ -62,11 +76,14 @@ const plagiarismCheckerFlow = ai.defineFlow(
   async (input) => {
     // Basic validation
     if (!input.text || input.text.trim().length < 20) {
-        return {
-            uniquePercentage: 100,
-            plagiarizedPercentage: 0,
-            sentences: input.text.split(/(?<=[.?!।\n])\s*/).filter(s => s.trim().length > 0).map(s => ({ text: s, isPlagiarized: false }))
-        };
+      return {
+        uniquePercentage: 100,
+        plagiarizedPercentage: 0,
+        sentences: input.text
+          .split(/(?<=[.?!।\n])\s*/)
+          .filter((s) => s.trim().length > 0)
+          .map((s) => ({text: s, isPlagiarized: false})),
+      };
     }
 
     const {output} = await prompt(input);
