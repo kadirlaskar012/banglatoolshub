@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CheckCircle, Terminal, XCircle, Clock } from 'lucide-react';
 import { checkPlagiarism, type PlagiarismResult as ApiPlagiarismResult } from '@/ai/flows/plagiarism-checker-flow';
+import { cn } from '@/lib/utils';
 
 interface HighlightedSentence {
   text: string;
@@ -22,6 +23,7 @@ interface PlagiarismResult {
 }
 
 const DAILY_LIMIT = 2;
+const WORD_LIMIT = 250;
 
 const getApiUsage = (): { count: number; date: string } => {
   if (typeof window === 'undefined') return { count: 0, date: '' };
@@ -56,6 +58,14 @@ export default function AiPlagiarismChecker() {
   const [remainingChecks, setRemainingChecks] = useState(DAILY_LIMIT);
   const [cooldown, setCooldown] = useState('');
 
+  const wordCount = useMemo(() => {
+    return text.trim().split(/\s+/).filter(Boolean).length;
+  }, [text]);
+
+  const isWordLimitExceeded = useMemo(() => {
+      return isApiMode && wordCount > WORD_LIMIT;
+  }, [isApiMode, wordCount]);
+
   const updateRemainingChecks = () => {
     const usage = getApiUsage();
     const today = new Date().toISOString().split('T')[0];
@@ -86,6 +96,7 @@ export default function AiPlagiarismChecker() {
             setCooldown(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
         } else {
             setCooldown('');
+            updateRemainingChecks();
         }
     }, 1000);
     
@@ -173,6 +184,15 @@ export default function AiPlagiarismChecker() {
         return;
     }
 
+    if (isWordLimitExceeded) {
+        toast({
+            title: "শব্দসীমা অতিক্রম করেছে",
+            description: `অনলাইন মোডে সর্বোচ্চ ${WORD_LIMIT} টি শব্দ ব্যবহার করা যাবে।`,
+            variant: "destructive",
+        });
+        return;
+    }
+
     setIsLoading(true);
     setResult(null);
 
@@ -221,14 +241,29 @@ export default function AiPlagiarismChecker() {
           </Alert>
        )}
 
-      <Textarea
-        placeholder="আপনার বাংলা লেখাটি এখানে পেস্ট করুন..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        className="min-h-[250px] text-base"
-        disabled={isLoading}
-      />
-      <Button onClick={handleCheck} disabled={isLoading || !text.trim() || (isApiMode && remainingChecks <= 0)} className="w-full md:w-auto text-lg py-6">
+      <div>
+        <Textarea
+            placeholder="আপনার বাংলা লেখাটি এখানে পেস্ট করুন..."
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="min-h-[250px] text-base"
+            disabled={isLoading}
+        />
+        <div className="text-sm text-muted-foreground mt-2 flex justify-between">
+            <span>
+                {isApiMode && isWordLimitExceeded && (
+                    <span className="text-destructive font-semibold">
+                        শব্দসীমা অতিক্রম করেছে!
+                    </span>
+                )}
+            </span>
+            <span className={cn(isWordLimitExceeded && "text-destructive font-semibold")}>
+                শব্দ সংখ্যা: {wordCount.toLocaleString('bn-BD')} {isApiMode && `/ ${WORD_LIMIT.toLocaleString('bn-BD')}`}
+            </span>
+        </div>
+      </div>
+
+      <Button onClick={handleCheck} disabled={isLoading || !text.trim() || (isApiMode && (remainingChecks <= 0 || isWordLimitExceeded))} className="w-full md:w-auto text-lg py-6">
         {isLoading ? 'যাচাই করা হচ্ছে...' : 'মৌলিকতা যাচাই করুন'}
       </Button>
 
