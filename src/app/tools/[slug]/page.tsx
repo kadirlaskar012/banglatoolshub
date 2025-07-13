@@ -71,8 +71,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
     <div className="max-w-5xl mx-auto">
       <Breadcrumbs
         items={[
-          { label: 'হোম', href: '/' },
-          { label: 'টুলস', href: '/tools' },
+          { label: 'Home', href: '/' },
+          { label: 'Tools', href: '/tools' },
           { label: tool.name },
         ]}
       />
@@ -93,10 +93,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         <div className="lg:col-span-2">
             <Card>
-                <CardHeader>
-                    <CardTitle className='font-headline text-2xl'>টুলটি ব্যবহার করুন</CardTitle>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                     {ToolComponent ? <ToolComponent /> : (
                         <div className="p-8 border-2 border-dashed rounded-lg bg-muted/50 text-center text-muted-foreground">
                             টুল ইন্টারফেস লোড হচ্ছে...
