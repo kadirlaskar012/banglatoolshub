@@ -21,15 +21,10 @@ import {
 
 // Dynamically import all tool components
 const ToolComponents: { [key: string]: React.ComponentType<any> } = {
-  'ai-plagiarism-checker': dynamic(() => import('@/components/tools/AiPlagiarismChecker'), { loading: () => <ToolSkeleton /> }),
-  'legal-document-summarizer': dynamic(() => import('@/components/tools/LegalDocumentSummarizer'), { loading: () => <ToolSkeleton /> }),
-  'loan-emi-calculator': dynamic(() => import('@/components/tools/LoanEmiCalculator'), { loading: () => <ToolSkeleton /> }),
-  'keyword-research-tool': dynamic(() => import('@/components/tools/KeywordResearchTool'), { loading: () => <ToolSkeleton /> }),
-  'online-cv-resume-builder': dynamic(() => import('@/components/tools/OnlineCvResumeBuilder'), { loading: () => <ToolSkeleton /> }),
-  'investment-return-calculator': dynamic(() => import('@/components/tools/InvestmentReturnCalculator'), { loading: () => <ToolSkeleton /> }),
   'age-calculator': dynamic(() => import('@/components/tools/AgeCalculator'), { loading: () => <ToolSkeleton /> }),
-  'video-to-mp3-converter': dynamic(() => import('@/components/tools/VideoToMp3Converter'), { loading: () => <ToolSkeleton /> }),
+  'ai-plagiarism-checker': dynamic(() => import('@/components/tools/AiPlagiarismChecker'), { loading: () => <ToolSkeleton /> }),
   'gst-vat-calculator': dynamic(() => import('@/components/tools/GstVatCalculator'), { loading: () => <ToolSkeleton /> }),
+  'investment-return-calculator': dynamic(() => import('@/components/tools/InvestmentReturnCalculator'), { loading: () => <ToolSkeleton /> }),
 };
 
 const ToolSkeleton = () => (

@@ -1,17 +1,9 @@
 import {
-  PenSquare,
   Calculator,
-  Type,
-  Image as LucideImage,
   ChevronRight,
   ScanText,
-  FileText,
-  Search,
-  FileSignature,
   TrendingUp,
   CalendarDays,
-  FileScan,
-  Clapperboard,
   Receipt,
   type LucideProps,
 } from 'lucide-react';
@@ -34,34 +26,18 @@ export const Icons = {
       <path d="M17.5 19V9.5a2.5 2.5 0 0 1 5 0V19" />
     </svg>
   ),
-  pen: PenSquare,
   calculator: Calculator,
-  type: Type,
-  image: LucideImage,
   chevronRight: ChevronRight,
   'scan-text': ScanText,
-  'file-text': FileText,
-  search: Search,
-  'file-signature': FileSignature,
   'trending-up': TrendingUp,
   'calendar-days': CalendarDays,
-  'file-scan': FileScan,
-  clapperboard: Clapperboard,
   receipt: Receipt,
 };
 
 export const iconMap = {
-  pen: Icons.pen,
   calculator: Icons.calculator,
-  type: Icons.type,
-  image: Icons.image,
   'scan-text': Icons['scan-text'],
-  'file-text': Icons['file-text'],
-  search: Icons.search,
-  'file-signature': Icons['file-signature'],
   'trending-up': Icons['trending-up'],
   'calendar-days': Icons['calendar-days'],
-  'file-scan': Icons['file-scan'],
-  clapperboard: Icons.clapperboard,
   receipt: Icons.receipt,
 };
