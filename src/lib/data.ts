@@ -1,3 +1,5 @@
+'use server'
+
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -161,4 +163,13 @@ export async function getBlogPostsForMenu(): Promise<MenuPost[]> {
         slug: post.slug,
         title: post.title,
     }));
+}
+
+
+export async function getMenuData() {
+    const [tools, posts] = await Promise.all([
+        getToolsForMenu(),
+        getBlogPostsForMenu(),
+    ]);
+    return { tools, posts };
 }

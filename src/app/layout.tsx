@@ -3,17 +3,20 @@ import { AppProvider } from '@/components/AppProvider';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
+import { getMenuData } from '@/lib/data';
 
 export const metadata: Metadata = {
   title: 'Bangla Tools HUB',
   description: 'A hub of essential tools for the modern Bangla user.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const menuData = await getMenuData();
+
   return (
     <html lang="bn" suppressHydrationWarning>
       <head>
@@ -31,7 +34,7 @@ export default function RootLayout({
       <body
         className={cn('min-h-screen bg-background font-body antialiased')}
       >
-        <AppProvider>{children}</AppProvider>
+        <AppProvider menuData={menuData}>{children}</AppProvider>
         <Toaster />
       </body>
     </html>

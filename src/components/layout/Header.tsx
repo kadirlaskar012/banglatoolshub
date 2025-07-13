@@ -5,11 +5,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, ChevronDown, Home } from 'lucide-react';
+import { Menu, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { NavItem, MenuTool, MenuPost } from '@/lib/types';
+import type { MenuTool, MenuPost } from '@/lib/types';
 import { Icons } from '@/components/icons';
-import { getToolsForMenu, getBlogPostsForMenu } from '@/lib/data';
+import { getMenuData } from '@/lib/data';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -18,26 +18,16 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-const StaticNavItems: NavItem[] = [
-    { title: 'Home', href: '/' },
-];
+interface HeaderProps {
+    menuData: {
+        tools: MenuTool[];
+        posts: MenuPost[];
+    }
+}
 
-export default function Header() {
+export default function Header({ menuData }: HeaderProps) {
     const pathname = usePathname();
-    const [tools, setTools] = React.useState<MenuTool[]>([]);
-    const [posts, setPosts] = React.useState<MenuPost[]>([]);
-
-    React.useEffect(() => {
-        async function fetchData() {
-            const [toolData, postData] = await Promise.all([
-                getToolsForMenu(),
-                getBlogPostsForMenu(),
-            ]);
-            setTools(toolData);
-            setPosts(postData);
-        }
-        fetchData();
-    }, []);
+    const { tools, posts } = menuData;
 
     const NavLinks = ({ isMobile = false }: { isMobile?: boolean }) => (
         <>
@@ -46,7 +36,7 @@ export default function Header() {
                 className={cn(
                     'transition-colors hover:text-primary',
                     pathname === '/' ? 'text-primary' : 'text-foreground/60',
-                    isMobile && 'px-4 py-2 text-lg'
+                    isMobile ? 'px-4 py-2 text-lg' : 'text-sm font-medium'
                 )}
             >
                 Home
@@ -54,7 +44,7 @@ export default function Header() {
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={cn('gap-1', pathname.startsWith('/tools') ? 'text-primary' : 'text-foreground/60', isMobile && 'justify-start w-full px-4 py-2 text-lg')}>
+                    <Button variant="ghost" className={cn('gap-1', pathname.startsWith('/tools') ? 'text-primary' : 'text-foreground/60', isMobile && 'justify-start w-full px-4 py-2 text-lg', !isMobile && 'text-sm font-medium')}>
                         Tools <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -71,7 +61,7 @@ export default function Header() {
 
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={cn('gap-1', pathname.startsWith('/blog') ? 'text-primary' : 'text-foreground/60', isMobile && 'justify-start w-full px-4 py-2 text-lg')}>
+                     <Button variant="ghost" className={cn('gap-1', pathname.startsWith('/blog') ? 'text-primary' : 'text-foreground/60', isMobile && 'justify-start w-full px-4 py-2 text-lg', !isMobile && 'text-sm font-medium')}>
                         Blog <ChevronDown className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -100,7 +90,7 @@ export default function Header() {
 
                 <div className="flex flex-1 items-center justify-end">
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center space-x-2 text-sm font-medium">
+                    <nav className="hidden md:flex items-center space-x-1">
                         <NavLinks />
                     </nav>
 
