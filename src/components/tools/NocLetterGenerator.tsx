@@ -120,8 +120,8 @@ const translations = {
 
 const allTemplates = {
     bn: {
-        job: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: অনাপত্তিপত্র (No Objection Certificate) প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাইতেছে যে, ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}, আমাদের প্রতিষ্ঠানে একজন ${data.designation || `[${t.designation}]`} হিসেবে কর্মরত আছেন।\n\nতার ${data.purpose || `[${t.purpose}]`} এর জন্য আমাদের পক্ষ থেকে কোনো আপত্তি নেই। আমরা তার সার্বিক সাফল্য কামনা করি।\n\nবিনীত,\n\n\n\n(${data.name || `[${t.name}]`})\n${data.organizationName || `[${t.organizationName}]`}`,
-        travel: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: বিদেশ ভ্রমণের জন্য অনাপত্তিপত্র।\n\nজনাব,\nআমি, ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}, ${data.organizationName || `[${t.organizationName}]`} এর একজন ${data.designation || `[${t.designation}]`}। আমার পাসপোর্ট নম্বর ${data.passportNumber || '[পাসপোর্ট নম্বর]'}।\n\nআমি ${data.purpose || `[উদ্দেশ্য, যেমন - পর্যটন/ব্যবসা]`}-এর জন্য বিদেশ ভ্রমণে যেতে ইচ্ছুক। এই ভ্রমণের বিষয়ে আমার নিয়োগকর্তা বা প্রতিষ্ঠানের পক্ষ থেকে কোনো আপত্তি নেই।\n\nঅতএব, মহোদয়ের নিকট আমার আবেদন, আমাকে উক্ত ভ্রমণের জন্য একটি অনাপত্তিপত্র (NOC) প্রদান করে বাধিত করবেন।\n\nবিনীত,\n\n\n\n(${data.name || `[${t.name}]`})\n${data.organizationName || `[${t.organizationName}]`}`,
+        job: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: অনাপত্তিপত্র (No Objection Certificate) প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাইতেছে যে, ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}, আমাদের প্রতিষ্ঠানে একজন ${data.designation || `[${t.designation}]`} হিসেবে কর্মরত আছেন।\n\nতার ${data.purpose || `[${t.purpose}]`} এর জন্য আমাদের পক্ষ থেকে কোনো আপত্তি নেই। আমরা তার সার্বিক সাফল্য কামনা করি।\n\nবিনীত,\n\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`,
+        travel: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: বিদেশ ভ্রমণের জন্য অনাপত্তিপত্র।\n\nজনাব,\nআমি, ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}, ${data.organizationName || `[${t.organizationName}]`} এর একজন ${data.designation || `[${t.designation}]`}। আমার পাসপোর্ট নম্বর ${data.passportNumber || '[পাসপোর্ট নম্বর]'}।\n\nআমি ${data.purpose || `[উদ্দেশ্য, যেমন - পর্যটন/ব্যবসা]`}-এর জন্য বিদেশ ভ্রমণে যেতে ইচ্ছুক। এই ভ্রমণের বিষয়ে আমার নিয়োগকর্তা বা প্রতিষ্ঠানের পক্ষ থেকে কোনো আপত্তি নেই।\n\nঅতএব, মহোদয়ের নিকট আমার আবেদন, আমাকে উক্ত ভ্রমণের জন্য একটি অনাপত্তিপত্র (NOC) প্রদান করে বাধিত করবেন।\n\nবিনীত,\n\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`,
         vehicle: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: গাড়ির মালিকানা হস্তান্তর/স্থানান্তরের জন্য অনাপত্তিপত্র।\n\nজনাব,\nএই মর্মে জানানো যাচ্ছে যে, আমি, ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}, নিম্নোক্ত গাড়ির বর্তমান মালিক:\n\nগাড়ির বিবরণ: ${data.vehicleInfo || `[${t.vehicleInfo}]`}\nরেজিস্ট্রেশন নম্বর: ${data.vehicleRegNumber || `[${t.vehicleRegNumber}]`}\nচ্যাসিস নম্বর: ${data.chassisNumber || `[${t.chassisNumber}]`}\nইঞ্জিন নম্বর: ${data.engineNumber || `[${t.engineNumber}]`}\n\nআমি উক্ত গাড়িটি ${data.purpose || `[উদ্দেশ্য, যেমন- বিক্রয়/স্থানান্তর]`} করতে চাই। এই বিষয়ে আমার কোনো আপত্তি নেই।\n\nঅতএব, প্রয়োজনীয় ব্যবস্থা গ্রহণের জন্য অনুরোধ করা হলো।\n\nবিনীত,\n\n\n\n(${data.name || `[${t.name}]`})`,
         property: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: জমি/সম্পত্তির জন্য অনাপত্তিপত্র।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাচ্ছে যে, ${data.propertyAddress || `[${t.propertyAddress}]`} ঠিকানায় অবস্থিত সম্পত্তির মালিক ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}।\n\nউক্ত সম্পত্তির উপর ${data.purpose || `[উদ্দেশ্য, যেমন- নির্মাণ/বিক্রয়]`} করার ক্ষেত্রে আমাদের/আমার কোনো আপত্তি নেই।\n\nআপনার সদয় বিবেচনার জন্য ধন্যবাদ।\n\nবিনীত,\n\n\n\n(${data.organizationName || `[${t.organizationName}]`})`,
         rent: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: ফ্ল্যাট/বাড়ি ভাড়ার জন্য অনাপত্তিপত্র।\n\nজনাব,\nআমি, ${data.name || `[${t.name}]`}, ${data.propertyAddress || `[${t.propertyAddress}]`} ঠিকানায় অবস্থিত ফ্ল্যাটের মালিক।\n\nআমি আমার ফ্ল্যাটটি ${data.purpose || `[ভাড়াটিয়ার নাম]`}-কে ভাড়া দিতে ইচ্ছুক। এই বিষয়ে আমার কোনো আপত্তি নেই এবং এর জন্য প্রয়োজনীয় ব্যবস্থা গ্রহণে আমি সম্মতি প্রদান করছি।\n\nধন্যবাদান্তে,\n\n\n\n(${data.name || `[${t.name}]`})`,
@@ -131,7 +131,7 @@ const allTemplates = {
         bank: (data: any, t: any) => `বরাবর,\nব্যবস্থাপক,\n${data.bankName || `[${t.bankName}]`}\n${data.address || `[${t.address}]`}\n\nবিষয়: অনাপত্তিপত্র প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাচ্ছে যে, ${data.name || `[${t.name}]`}, আমাদের প্রতিষ্ঠানে ${data.designation || `[${t.designation}]`} পদে কর্মরত আছেন। তার অ্যাকাউন্ট নম্বর হলো ${data.accountNumber || `[${t.accountNumber}]`}।\n\nতিনি আপনার ব্যাংক থেকে ${data.purpose || `[উদ্দেশ্য, যেমন- ব্যক্তিগত লোন/ক্রেডিট কার্ড]`} নিতে ইচ্ছুক। এই বিষয়ে আমাদের প্রতিষ্ঠানের পক্ষ থেকে কোনো আপত্তি নেই।\n\nধন্যবাদান্তে,\n\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`
     },
     en: {
-        job: (data: any, t: any) => `To,\nThe ${data.authorityName || `[${t.authorityName}]`}\n\nSubject: No Objection Certificate (NOC).\n\nDear Sir/Madam,\nThis is to certify that ${data.name || `[${t.name}]`}, Son/Daughter of ${data.fathersName || `[${t.fathersName}]`}, is a valued employee at our organization, serving as a ${data.designation || `[${t.designation}]`}.\n\nWe have no objection to him/her for the purpose of ${data.purpose || `[${t.purpose}]`}. We wish him/her all the best for their future endeavors.\n\nSincerely,\n\n\n\n(${data.name || `[${t.name}]`})\n${data.organizationName || `[${t.organizationName}]`}`,
+        job: (data: any, t: any) => `To,\nThe ${data.authorityName || `[${t.authorityName}]`}\n\nSubject: No Objection Certificate (NOC).\n\nDear Sir/Madam,\nThis is to certify that ${data.name || `[${t.name}]`}, Son/Daughter of ${data.fathersName || `[${t.fathersName}]`}, is a valued employee at our organization, ${data.organizationName || `[${t.organizationName}]`}, serving as a ${data.designation || `[${t.designation}]`}.\n\nWe have no objection to him/her for the purpose of ${data.purpose || `[${t.purpose}]`}. We wish him/her all the best for their future endeavors.\n\nSincerely,\n\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`,
         travel: (data: any, t: any) => `To,\nThe ${data.authorityName || `[${t.authorityName}]`}\n\nSubject: No Objection Certificate for Foreign Travel.\n\nDear Sir/Madam,\nThis is to certify that ${data.name || `[${t.name}]`}, Son/Daughter of ${data.fathersName || `[${t.fathersName}]`}, is currently employed as a ${data.designation || `[${t.designation}]`} at ${data.organizationName || `[${t.organizationName}]`}. His/Her passport number is ${data.passportNumber || '[Passport Number]'}.\n\nWe have no objection to him/her travelling abroad for the purpose of ${data.purpose || `[purpose, e.g., tourism/business]`}.\n\nThis certificate is issued upon his/her request.\n\nSincerely,\n\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`,
         vehicle: (data: any, t: any) => `To,\nThe ${data.authorityName || `[${t.authorityName}]`}\n\nSubject: No Objection Certificate for Vehicle Transfer.\n\nDear Sir/Madam,\nThis is to certify that I, ${data.name || `[${t.name}]`}, Son/Daughter of ${data.fathersName || `[${t.fathersName}]`}, am the legal owner of the following vehicle:\n\nVehicle Model: ${data.vehicleInfo || `[${t.vehicleInfo}]`}\nRegistration No: ${data.vehicleRegNumber || `[${t.vehicleRegNumber}]`}\nChassis No: ${data.chassisNumber || `[${t.chassisNumber}]`}\nEngine No: ${data.engineNumber || `[${t.engineNumber}]`}\n\nI have no objection regarding the ${data.purpose || `[purpose, e.g., sale/transfer]`} of the said vehicle.\n\nThis certificate is issued to facilitate the necessary legal procedures.\n\nSincerely,\n\n\n\n(${data.name || `[${t.name}]`})`,
         property: (data: any, t: any) => `To,\nThe ${data.authorityName || `[${t.authorityName}]`}\n\nSubject: No Objection Certificate for Property.\n\nDear Sir/Madam,\nThis is to certify that we/I have no objection to ${data.name || `[${t.name}]`}, owner of the property located at ${data.propertyAddress || `[${t.propertyAddress}]`}, for the purpose of ${data.purpose || `[purpose, e.g., construction/mortgage]`}.\n\nThis certificate is issued upon request for official use.\n\nSincerely,\n\n\n\n(${data.organizationName || `[${t.organizationName}]`})`,
@@ -233,11 +233,11 @@ export default function NocLetterGenerator() {
         }
     };
     
-    const handleDownloadDoc = async () => {
+    const handleDownloadDoc = () => {
        if (letterPreviewRef.current) {
-           const letterText = letterPreviewRef.current.innerText;
-           const blob = new Blob([letterText], { type: 'text/plain;charset=utf-8' });
-           saveAs(blob, 'NOC-Letter.doc');
+            const letterText = letterPreviewRef.current.innerText;
+            const blob = new Blob([`\uFEFF${letterText}`], { type: 'text/plain;charset=utf-8' });
+            saveAs(blob, 'NOC-Letter.doc');
        }
     };
     
@@ -262,14 +262,13 @@ export default function NocLetterGenerator() {
                 const canvasHeight = canvas.height;
                 const ratio = canvasWidth / canvasHeight;
                 const width = pdfWidth - 20;
-                const height = width / ratio;
+                let height = width / ratio;
 
-                let finalHeight = height;
                 if(height > pdfHeight - 20) {
-                  finalHeight = pdfHeight - 20;
+                  height = pdfHeight - 20;
                 }
                 
-                pdf.addImage(imgData, 'PNG', 10, 10, width, finalHeight);
+                pdf.addImage(imgData, 'PNG', 10, 10, width, height);
                 pdf.save("NOC-Letter.pdf");
             }).catch(error => {
                 console.error("Error generating PDF:", error);
@@ -300,7 +299,7 @@ export default function NocLetterGenerator() {
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-8">
             <Card>
                 <CardHeader>
                     <CardTitle>{t.title}</CardTitle>
@@ -446,32 +445,31 @@ export default function NocLetterGenerator() {
                     </form>
                 </CardContent>
             </Card>
+            
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t.preview}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div ref={letterPreviewRef} className="p-6 border rounded-md min-h-[400px] bg-background text-sm">
+                        <p className="mb-4 whitespace-pre-wrap">{t.issueDate}: {issueDate}</p>
+                        <div className="whitespace-pre-wrap">{generatedLetter}</div>
+                    </div>
+                </CardContent>
+            </Card>
 
-            <div className="space-y-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t.preview}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div ref={letterPreviewRef} className="p-6 border rounded-md min-h-[400px] bg-background">
-                            <p className="mb-4 whitespace-pre-wrap">{t.issueDate}: {issueDate}</p>
-                            <div className="whitespace-pre-wrap text-sm">{generatedLetter}</div>
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>{t.outputOptions}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-                        <Button onClick={handleDownloadPdf}><Download className="mr-2 h-4 w-4" />{t.downloadPDF}</Button>
-                        <Button onClick={handleDownloadDoc}><Download className="mr-2 h-4 w-4" />{t.downloadDOC}</Button>
-                        <Button onClick={handleCopy} variant="outline"><Copy className="mr-2 h-4 w-4" />{t.copy}</Button>
-                        <Button onClick={handlePrint} variant="outline"><Printer className="mr-2 h-4 w-4" />{t.print}</Button>
-                        <Button onClick={handleReset} variant="destructive" className="lg:col-span-2"><RotateCcw className="mr-2 h-4 w-4" />{t.reset}</Button>
-                    </CardContent>
-                </Card>
-            </div>
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t.outputOptions}</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+                    <Button onClick={handleDownloadPdf}><Download className="mr-2 h-4 w-4" />{t.downloadPDF}</Button>
+                    <Button onClick={handleDownloadDoc}><Download className="mr-2 h-4 w-4" />{t.downloadDOC}</Button>
+                    <Button onClick={handleCopy} variant="outline"><Copy className="mr-2 h-4 w-4" />{t.copy}</Button>
+                    <Button onClick={handlePrint} variant="outline"><Printer className="mr-2 h-4 w-4" />{t.print}</Button>
+                    <Button onClick={handleReset} variant="destructive" className="lg:col-span-2"><RotateCcw className="mr-2 h-4 w-4" />{t.reset}</Button>
+                </CardContent>
+            </Card>
         </div>
     );
 }
