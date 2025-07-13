@@ -91,4 +91,7 @@
   body {
     @apply bg-background text-foreground;
   }
+  .prose h2 {
+    @apply border-b border-primary/50 pb-2 mb-4;
+  }
 }
