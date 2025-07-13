@@ -190,11 +190,27 @@ export default function AgeCalculator() {
       <div className="w-full space-y-2 text-center flex flex-col items-center">
         <Label className="text-lg font-medium">আপনার জন্ম তারিখ দিন</Label>
 
-        <Tabs defaultValue="calendar" className="w-full max-w-sm">
+        <Tabs defaultValue="manual" className="w-full max-w-sm">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="calendar">ক্যালেন্ডার</TabsTrigger>
             <TabsTrigger value="manual">ম্যানুয়াল</TabsTrigger>
+            <TabsTrigger value="calendar">ক্যালেন্ডার</TabsTrigger>
           </TabsList>
+          <TabsContent value="manual" className="pt-4">
+             <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label htmlFor="day" className="text-xs">দিন</Label>
+                  <Input id="day" placeholder="DD" value={day} onChange={(e) => handleManualInputChange('day', e.target.value)} maxLength={2} />
+                </div>
+                <div>
+                  <Label htmlFor="month" className="text-xs">মাস</Label>
+                  <Input id="month" placeholder="MM" value={month} onChange={(e) => handleManualInputChange('month', e.target.value)} maxLength={2} />
+                </div>
+                <div>
+                  <Label htmlFor="year" className="text-xs">বছর</Label>
+                  <Input id="year" placeholder="YYYY" value={year} onChange={(e) => handleManualInputChange('year', e.target.value)} maxLength={4} />
+                </div>
+              </div>
+          </TabsContent>
           <TabsContent value="calendar" className="pt-4">
               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
@@ -225,22 +241,6 @@ export default function AgeCalculator() {
                   />
                 </PopoverContent>
               </Popover>
-          </TabsContent>
-          <TabsContent value="manual" className="pt-4">
-             <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label htmlFor="day" className="text-xs">দিন</Label>
-                  <Input id="day" placeholder="DD" value={day} onChange={(e) => handleManualInputChange('day', e.target.value)} maxLength={2} />
-                </div>
-                <div>
-                  <Label htmlFor="month" className="text-xs">মাস</Label>
-                  <Input id="month" placeholder="MM" value={month} onChange={(e) => handleManualInputChange('month', e.target.value)} maxLength={2} />
-                </div>
-                <div>
-                  <Label htmlFor="year" className="text-xs">বছর</Label>
-                  <Input id="year" placeholder="YYYY" value={year} onChange={(e) => handleManualInputChange('year', e.target.value)} maxLength={4} />
-                </div>
-              </div>
           </TabsContent>
         </Tabs>
 
@@ -334,5 +334,3 @@ export default function AgeCalculator() {
     </div>
   );
 }
-
-    
