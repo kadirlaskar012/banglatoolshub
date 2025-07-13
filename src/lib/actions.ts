@@ -18,6 +18,8 @@ const ToolSchema = z.object({
     category: z.string().min(1, "Category is required."),
     icon: z.string().min(1, "Icon is required."),
     content: z.string().min(1, "Content for AI suggestions is required."),
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
 });
 
 // Server action to add a new tool
@@ -54,6 +56,8 @@ const BlogPostSchema = z.object({
     author: z.string().min(1, "Author is required."),
     imageUrl: z.string().url("Must be a valid URL."),
     relatedTools: z.string().optional(),
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
 });
 
 

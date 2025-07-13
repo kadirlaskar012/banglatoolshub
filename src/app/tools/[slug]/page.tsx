@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
   }
 
   return {
-    title: `${tool.name} | Bangla Tools HUB`,
-    description: tool.description,
+    title: tool.metaTitle || `${tool.name} | Bangla Tools HUB`,
+    description: tool.metaDescription || tool.description,
   };
 }
 

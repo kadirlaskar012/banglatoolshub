@@ -10,6 +10,8 @@ export interface Tool {
   icon: keyof typeof Icons;
   category: string;
   content: string; // The primary content of the tool page, used for AI suggestions
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 export interface BlogPost {
@@ -22,6 +24,8 @@ export interface BlogPost {
   publishedAt: string; // Should be in ISO format
   imageUrl: string;
   relatedTools?: string[]; // array of tool slugs
+  metaTitle?: string;
+  metaDescription?: string;
 }
 
 export interface NavItem {

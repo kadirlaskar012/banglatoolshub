@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { iconMap } from '@/components/icons';
+import { Separator } from '@/components/ui/separator';
 
 function SubmitButton() {
     const { pending } = useFormStatus();
@@ -64,6 +65,24 @@ export function ToolForm() {
                         <Label htmlFor="content">Content for AI Suggestions</Label>
                         <Textarea id="content" name="content" placeholder="Describe the tool's purpose and features for the AI to understand and suggest it correctly." required />
                     </div>
+
+                    <Separator />
+                    
+                    <div>
+                        <h3 className="text-lg font-medium">SEO Settings</h3>
+                        <p className="text-sm text-muted-foreground">Customize search engine appearance.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="metaTitle">Meta Title</Label>
+                        <Input id="metaTitle" name="metaTitle" placeholder="SEO-friendly title (optional)" />
+                    </div>
+
+                     <div className="space-y-2">
+                        <Label htmlFor="metaDescription">Meta Description</Label>
+                        <Textarea id="metaDescription" name="metaDescription" placeholder="A short description for search engines (optional)" />
+                    </div>
+
                 </CardContent>
                 <CardFooter>
                     <SubmitButton />

@@ -18,6 +18,8 @@ function mapDocToTool(doc: any): Tool {
         icon: data.icon as keyof typeof Icons,
         category: data.category,
         content: data.content,
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
     };
 }
 
@@ -33,6 +35,8 @@ function mapDocToBlogPost(doc: any): BlogPost {
         publishedAt: data.publishedAt, // Assuming it's stored as an ISO string
         imageUrl: data.imageUrl,
         relatedTools: data.relatedTools || [],
+        metaTitle: data.metaTitle,
+        metaDescription: data.metaDescription,
     };
 }
 

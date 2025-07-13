@@ -7,6 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '../ui/separator';
 
 
 function SubmitButton() {
@@ -57,6 +58,23 @@ export function BlogPostForm() {
                         <Label htmlFor="relatedTools">Related Tools (Slugs)</Label>
                         <Input id="relatedTools" name="relatedTools" placeholder="e.g. tool-slug-1, tool-slug-2" />
                         <p className="text-xs text-muted-foreground">Enter tool slugs separated by commas.</p>
+                    </div>
+
+                    <Separator />
+                    
+                    <div>
+                        <h3 className="text-lg font-medium">SEO Settings</h3>
+                        <p className="text-sm text-muted-foreground">Customize search engine appearance.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="metaTitle">Meta Title</Label>
+                        <Input id="metaTitle" name="metaTitle" placeholder="SEO-friendly title (optional)" />
+                    </div>
+
+                     <div className="space-y-2">
+                        <Label htmlFor="metaDescription">Meta Description</Label>
+                        <Textarea id="metaDescription" name="metaDescription" placeholder="A short description for search engines (optional)" />
                     </div>
 
                 </CardContent>
