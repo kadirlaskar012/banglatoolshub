@@ -5,10 +5,15 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Share2 } from 'lucide-react';
+import { Share2, CalendarIcon } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Calendar } from '@/components/ui/calendar';
 import { bn } from 'date-fns/locale';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 interface AgeResult {
   years: number;
@@ -30,9 +35,16 @@ interface TotalResult {
 }
 
 export default function AgeCalculator() {
-  const [dob, setDob] = useState<Date>();
+  const [dob, setDob] = useState<Date | undefined>();
   const [result, setResult] = useState<AgeResult | null>(null);
   const [totalResult, setTotalResult] = useState<TotalResult | null>(null);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // States for manual input
+  const [day, setDay] = useState('');
+  const [month, setMonth] = useState('');
+  const [year, setYear] = useState('');
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -46,15 +58,42 @@ export default function AgeCalculator() {
   }, [result, dob]);
 
   const handleDateSelect = (date: Date | undefined) => {
-    setDob(date);
-    // Automatically calculate age on date selection if a date is present
     if (date) {
-      calculateAge(date, false);
-    } else {
-      setResult(null);
-      setTotalResult(null);
+      setDob(date);
+      setDay(String(date.getDate()));
+      setMonth(String(date.getMonth() + 1));
+      setYear(String(date.getFullYear()));
     }
+    setIsCalendarOpen(false);
   }
+
+  const handleManualInputChange = (type: 'day' | 'month' | 'year', value: string) => {
+    const numValue = value.replace(/[^0-9]/g, '');
+    if (type === 'day') setDay(numValue);
+    if (type === 'month') setMonth(numValue);
+    if (type === 'year') setYear(numValue);
+  };
+
+  useEffect(() => {
+    const dayNum = parseInt(day, 10);
+    const monthNum = parseInt(month, 10);
+    const yearNum = parseInt(year, 10);
+
+    if (
+      !isNaN(dayNum) && !isNaN(monthNum) && !isNaN(yearNum) &&
+      dayNum > 0 && dayNum <= 31 &&
+      monthNum > 0 && monthNum <= 12 &&
+      String(year).length === 4
+    ) {
+      const date = new Date(yearNum, monthNum - 1, dayNum);
+      if (date.getFullYear() === yearNum && date.getMonth() === monthNum - 1 && date.getDate() === dayNum) {
+        setDob(date);
+      }
+    } else {
+        setDob(undefined);
+    }
+  }, [day, month, year]);
+
 
   const calculateAge = (birthDate: Date | undefined, showAlerts = true) => {
     if (!birthDate) {
@@ -135,7 +174,7 @@ export default function AgeCalculator() {
 
   const sharePreciseAge = () => {
     if (!result) return;
-    const shareText = `আমার সঠিক বয়স: ${result.years} বছর, ${result.months} মাস, ${result.days} দিন, ${result.hours} ঘণ্টা, ${result.minutes} মিনিট, এবং ${result.seconds} সেকেন্ড! আপনিও আপনার বয়স জানুন:`;
+    const shareText = `আমার সঠিক বয়স: ${result.years.toLocaleString('bn-BD')} বছর, ${result.months.toLocaleString('bn-BD')} মাস, ${result.days.toLocaleString('bn-BD')} দিন, ${result.hours.toLocaleString('bn-BD')} ঘণ্টা, ${result.minutes.toLocaleString('bn-BD')} মিনিট, এবং ${result.seconds.toLocaleString('bn-BD')} সেকেন্ড! আপনিও আপনার বয়স জানুন:`;
     handleShare(shareText, 'আমার সঠিক বয়স');
   };
 
@@ -149,19 +188,62 @@ export default function AgeCalculator() {
   return (
     <div className="flex flex-col items-center space-y-6 max-w-2xl mx-auto">
       <div className="w-full space-y-2 text-center flex flex-col items-center">
-        <Label htmlFor="dob" className="text-lg font-medium">আপনার জন্ম তারিখ</Label>
-        <Calendar
-            mode="single"
-            selected={dob}
-            onSelect={handleDateSelect}
-            initialFocus
-            disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-            locale={bn}
-            captionLayout="dropdown-buttons"
-            fromYear={1900}
-            toYear={new Date().getFullYear()}
-            className="rounded-md border bg-card"
-        />
+        <Label className="text-lg font-medium">আপনার জন্ম তারিখ দিন</Label>
+
+        <Tabs defaultValue="calendar" className="w-full max-w-sm">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="calendar">ক্যালেন্ডার</TabsTrigger>
+            <TabsTrigger value="manual">ম্যানুয়াল</TabsTrigger>
+          </TabsList>
+          <TabsContent value="calendar" className="pt-4">
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dob && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dob ? format(dob, "PPP", { locale: bn }) : <span>জন্ম তারিখ বাছুন</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={dob}
+                    onSelect={handleDateSelect}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                    locale={bn}
+                    captionLayout="dropdown-buttons"
+                    fromYear={1900}
+                    toYear={new Date().getFullYear()}
+                  />
+                </PopoverContent>
+              </Popover>
+          </TabsContent>
+          <TabsContent value="manual" className="pt-4">
+             <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label htmlFor="day" className="text-xs">দিন</Label>
+                  <Input id="day" placeholder="DD" value={day} onChange={(e) => handleManualInputChange('day', e.target.value)} maxLength={2} />
+                </div>
+                <div>
+                  <Label htmlFor="month" className="text-xs">মাস</Label>
+                  <Input id="month" placeholder="MM" value={month} onChange={(e) => handleManualInputChange('month', e.target.value)} maxLength={2} />
+                </div>
+                <div>
+                  <Label htmlFor="year" className="text-xs">বছর</Label>
+                  <Input id="year" placeholder="YYYY" value={year} onChange={(e) => handleManualInputChange('year', e.target.value)} maxLength={4} />
+                </div>
+              </div>
+          </TabsContent>
+        </Tabs>
+
       </div>
       
       <Button onClick={() => calculateAge(dob)} size="lg" className="w-full max-w-xs text-lg" disabled={!dob}>
@@ -252,3 +334,5 @@ export default function AgeCalculator() {
     </div>
   );
 }
+
+    
