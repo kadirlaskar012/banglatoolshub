@@ -4,7 +4,6 @@ import matter from 'gray-matter';
 import { remark } from 'remark';
 import html from 'remark-html';
 import type { Tool, BlogPost } from './types';
-import {-transform} from 'stream';
 
 const toolsDirectory = path.join(process.cwd(), 'src/content/tools');
 const blogDirectory = path.join(process.cwd(), 'src/content/blog');
