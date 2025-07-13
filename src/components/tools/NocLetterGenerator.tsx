@@ -18,7 +18,6 @@ import { bn, enUS } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
-import { asBlob } from 'html-to-docx';
 
 
 // Translations and Templates
@@ -194,31 +193,9 @@ export default function NocLetterGenerator() {
     
     const handleDownloadDoc = async () => {
        if (letterPreviewRef.current) {
-           const htmlString = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <meta charset="UTF-8">
-            <style>
-                body {
-                    font-family: 'Times New Roman', Times, serif;
-                    font-size: 12pt;
-                    white-space: pre-wrap;
-                }
-            </style>
-            </head>
-            <body>
-                ${letterPreviewRef.current.innerHTML.replace(/\n/g, '<br />')}
-            </body>
-            </html>`;
-           
-           try {
-                const blob = await asBlob(htmlString);
-                saveAs(blob, 'NOC-Letter.docx');
-           } catch(error) {
-               console.error("Error generating DOCX:", error);
-               toast({ title: "ডাউনলোড ব্যর্থ হয়েছে", description: "DOCX ফাইল তৈরি করার সময় একটি সমস্যা হয়েছে।", variant: "destructive" });
-           }
+           const letterText = letterPreviewRef.current.innerText;
+           const blob = new Blob([letterText], { type: 'text/plain;charset=utf-8' });
+           saveAs(blob, 'NOC-Letter.doc');
        }
     };
     
@@ -226,7 +203,7 @@ export default function NocLetterGenerator() {
         const input = letterPreviewRef.current;
         if (input) {
             html2canvas(input, {
-                scale: 2, // Higher scale for better quality
+                scale: 2,
                 useCORS: true, 
                 backgroundColor: '#ffffff'
             }).then(canvas => {
@@ -242,7 +219,7 @@ export default function NocLetterGenerator() {
                 const canvasWidth = canvas.width;
                 const canvasHeight = canvas.height;
                 const ratio = canvasWidth / canvasHeight;
-                const width = pdfWidth - 20; // with some margin
+                const width = pdfWidth - 20;
                 const height = width / ratio;
 
                 let finalHeight = height;
@@ -267,7 +244,9 @@ export default function NocLetterGenerator() {
                 printWindow.document.write('<html><head><title>Print NOC</title>');
                 printWindow.document.write('<style> body { font-family: sans-serif; white-space: pre-wrap; padding: 20px; } </style>');
                 printWindow.document.write('</head><body>');
-                printWindow.document.write(previewElement.innerHTML.replace(/\n/g, '<br>'));
+                // Use innerText to get the rendered text with line breaks
+                const letterContent = previewElement.innerText.replace(/\n/g, '<br>');
+                printWindow.document.write(letterContent);
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
                 printWindow.focus();
@@ -337,19 +316,19 @@ export default function NocLetterGenerator() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <Label htmlFor="name">{t.name}</Label>
-                                    <Controller name="name" control={control} render={({ field }) => <Input id="name" {...field} />} />
+                                    <Controller name="name" control={control} render={({ field }) => <Input id="name" {...field} placeholder={t.name}/>} />
                                     {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                                 </div>
                                 <div>
                                     <Label htmlFor="fathersName">{t.fathersName}</Label>
-                                    <Controller name="fathersName" control={control} render={({ field }) => <Input id="fathersName" {...field} />} />
+                                    <Controller name="fathersName" control={control} render={({ field }) => <Input id="fathersName" {...field} placeholder={t.fathersName}/>} />
                                     {errors.fathersName && <p className="text-red-500 text-xs mt-1">{errors.fathersName.message}</p>}
                                 </div>
                             </div>
                             
                             <div>
                                 <Label htmlFor="authorityName">{t.authorityName}</Label>
-                                <Controller name="authorityName" control={control} render={({ field }) => <Input id="authorityName" {...field} />} />
+                                <Controller name="authorityName" control={control} render={({ field }) => <Input id="authorityName" {...field} placeholder={t.authorityName} />} />
                                 {errors.authorityName && <p className="text-red-500 text-xs mt-1">{errors.authorityName.message}</p>}
                             </div>
                             
@@ -357,18 +336,18 @@ export default function NocLetterGenerator() {
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="designation">{t.designation}</Label>
-                                        <Controller name="designation" control={control} render={({ field }) => <Input id="designation" {...field} />} />
+                                        <Controller name="designation" control={control} render={({ field }) => <Input id="designation" {...field} placeholder={t.designation}/>} />
                                     </div>
                                     <div>
                                         <Label htmlFor="organizationName">{t.organizationName}</Label>
-                                        <Controller name="organizationName" control={control} render={({ field }) => <Input id="organizationName" {...field} />} />
+                                        <Controller name="organizationName" control={control} render={({ field }) => <Input id="organizationName" {...field} placeholder={t.organizationName}/>} />
                                     </div>
                                 </div>
                             )}
 
                             <div>
                                 <Label htmlFor="purpose">{t.purpose}</Label>
-                                <Controller name="purpose" control={control} render={({ field }) => <Input id="purpose" {...field} />} />
+                                <Controller name="purpose" control={control} render={({ field }) => <Input id="purpose" {...field} placeholder={t.purpose}/>} />
                                 {errors.purpose && <p className="text-red-500 text-xs mt-1">{errors.purpose.message}</p>}
                             </div>
                         </div>
@@ -404,5 +383,3 @@ export default function NocLetterGenerator() {
         </div>
     );
 }
-
-    
