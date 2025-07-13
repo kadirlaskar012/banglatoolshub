@@ -30,6 +30,10 @@ export interface BlogPost {
   relatedTools?: string[]; // array of tool slugs
   metaTitle?: string;
   metaDescription?: string;
+  faq?: {
+    question: string;
+    answer: string;
+  }[];
 }
 
 export interface NavItem {
