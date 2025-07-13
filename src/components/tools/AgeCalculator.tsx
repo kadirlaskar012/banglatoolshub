@@ -1,14 +1,34 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+interface AgeResult {
+  years: number;
+  months: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
 export default function AgeCalculator() {
   const [dob, setDob] = useState<string>('');
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<AgeResult | null>(null);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (result) {
+      timer = setInterval(() => {
+        calculateAge();
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [result, dob]);
 
   const calculateAge = () => {
     if (!dob) {
@@ -18,39 +38,50 @@ export default function AgeCalculator() {
     }
 
     const birthDate = new Date(dob);
-    const today = new Date();
+    const now = new Date();
     
-    // Check for invalid date
-    if (birthDate > today) {
+    if (birthDate > now) {
         setResult(null);
         alert("জন্ম তারিখ আজকের তারিখের পরে হতে পারে না।");
         return;
     }
 
-    let years = today.getFullYear() - birthDate.getFullYear();
-    let months = today.getMonth() - birthDate.getMonth();
-    let days = today.getDate() - birthDate.getDate();
-
+    let years = now.getFullYear() - birthDate.getFullYear();
+    let months = now.getMonth() - birthDate.getMonth();
+    let days = now.getDate() - birthDate.getDate();
+    let hours = now.getHours() - birthDate.getHours();
+    let minutes = now.getMinutes() - birthDate.getMinutes();
+    let seconds = now.getSeconds() - birthDate.getSeconds();
+    
+    if (seconds < 0) {
+        minutes--;
+        seconds += 60;
+    }
+    if (minutes < 0) {
+        hours--;
+        minutes += 60;
+    }
+    if (hours < 0) {
+        days--;
+        hours += 24;
+    }
     if (days < 0) {
-      months--;
-      // Get the last day of the previous month
-      const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
-      days += lastDayOfPrevMonth;
+        months--;
+        const lastDayOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+        days += lastDayOfPrevMonth;
     }
-
     if (months < 0) {
-      years--;
-      months += 12;
+        years--;
+        months += 12;
     }
 
-    setResult(`আপনার বয়স ${years.toLocaleString('bn-BD')} বছর, ${months.toLocaleString('bn-BD')} মাস এবং ${days.toLocaleString('bn-BD')} দিন`);
+    setResult({ years, months, days, hours, minutes, seconds });
   };
 
-  // Get today's date in YYYY-MM-DD format for the max attribute of the date input
   const todayString = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="flex flex-col items-center space-y-6 max-w-md mx-auto">
+    <div className="flex flex-col items-center space-y-6 max-w-lg mx-auto">
       <div className="w-full space-y-2">
         <Label htmlFor="dob" className="text-lg font-medium">আপনার জন্ম তারিখ</Label>
         <Input
@@ -68,14 +99,37 @@ export default function AgeCalculator() {
       </Button>
 
       {result && (
-        <Card className="mt-6 w-full bg-primary/10 border-primary/50">
+        <Card className="mt-6 w-full bg-primary/5 text-center">
             <CardHeader>
-                <CardTitle className="text-center text-primary font-headline">ফলাফল</CardTitle>
+                <CardTitle className="text-2xl text-primary font-headline">আপনার সঠিক বয়স</CardTitle>
             </CardHeader>
             <CardContent>
-                <p className="text-2xl text-center font-bold text-primary-foreground">
-                    {result}
-                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-center">
+                    <div className="bg-background p-4 rounded-lg shadow-inner">
+                        <p className="text-4xl font-bold text-primary-foreground">{result.years.toLocaleString('bn-BD')}</p>
+                        <p className="text-muted-foreground">বছর</p>
+                    </div>
+                    <div className="bg-background p-4 rounded-lg shadow-inner">
+                        <p className="text-4xl font-bold text-primary-foreground">{result.months.toLocaleString('bn-BD')}</p>
+                        <p className="text-muted-foreground">মাস</p>
+                    </div>
+                    <div className="bg-background p-4 rounded-lg shadow-inner">
+                        <p className="text-4xl font-bold text-primary-foreground">{result.days.toLocaleString('bn-BD')}</p>
+                        <p className="text-muted-foreground">দিন</p>
+                    </div>
+                    <div className="bg-background p-4 rounded-lg shadow-inner">
+                        <p className="text-4xl font-bold text-primary-foreground">{result.hours.toLocaleString('bn-BD')}</p>
+                        <p className="text-muted-foreground">ঘন্টা</p>
+                    </div>
+                    <div className="bg-background p-4 rounded-lg shadow-inner">
+                        <p className="text-4xl font-bold text-primary-foreground">{result.minutes.toLocaleString('bn-BD')}</p>
+                        <p className="text-muted-foreground">মিনিট</p>
+                    </div>
+                    <div className="bg-background p-4 rounded-lg shadow-inner">
+                        <p className="text-4xl font-bold text-primary-foreground">{result.seconds.toLocaleString('bn-BD')}</p>
+                        <p className="text-muted-foreground">সেকেন্ড</p>
+                    </div>
+                </div>
             </CardContent>
         </Card>
       )}
