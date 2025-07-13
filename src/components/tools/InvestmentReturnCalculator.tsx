@@ -129,7 +129,7 @@ const OneTimeInvestmentCalculator = () => {
             });
         }
         
-        const blob = new Blob([downloadText], { type: 'text/plain;charset=utf-8' });
+        const blob = new Blob(['\uFEFF' + downloadText], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -387,7 +387,7 @@ const SIPCalculator = () => {
             });
         }
         
-        const blob = new Blob([downloadText], { type: 'text/plain;charset=utf-8' });
+        const blob = new Blob(['\uFEFF' + downloadText], { type: 'text/plain;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
