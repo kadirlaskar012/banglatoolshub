@@ -14,10 +14,6 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Copy, Printer, RotateCcw, Upload, Heading } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import html2canvas from 'html2canvas';
-import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
 import { bn, enUS } from 'date-fns/locale';
 
@@ -101,27 +97,25 @@ const translations = {
 
 const nocTemplates = {
     bn: {
-        job: (data: any) => `বরাবর,\n${data.authorityName || '[কর্তৃপক্ষের নাম]'}\n\nবিষয়: অনাপত্তিপত্র (No Objection Certificate) প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাইতেছে যে, ${data.name || '[নাম]'}, পিতা: ${data.fathersName || '[পিতার নাম]'}, আমাদের প্রতিষ্ঠানে একজন ${data.designation || '[পদবি]'} হিসেবে কর্মরত আছেন।\n\nতার ${data.purpose || '[উদ্দেশ্য]'} এর জন্য আমাদের পক্ষ থেকে কোনো আপত্তি নেই। আমরা তার সার্বিক সাফল্য কামনা করি।\n\nবিনীত,\n\n\n(স্বাক্ষর)\n${data.organizationName || '[প্রতিষ্ঠানের নাম]'}`
+        job: (data: any, t: any) => `বরাবর,\n${data.authorityName || `[${t.authorityName}]`}\n\nবিষয়: অনাপত্তিপত্র (No Objection Certificate) প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাইতেছে যে, ${data.name || `[${t.name}]`}, পিতা: ${data.fathersName || `[${t.fathersName}]`}, আমাদের প্রতিষ্ঠানে একজন ${data.designation || `[${t.designation}]`} হিসেবে কর্মরত আছেন।\n\nতার ${data.purpose || `[${t.purpose}]`} এর জন্য আমাদের পক্ষ থেকে কোনো আপত্তি নেই। আমরা তার সার্বিক সাফল্য কামনা করি।\n\nবিনীত,\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`
     },
     en: {
-        job: (data: any) => `To,\nThe ${data.authorityName || '[Authority Name]'}\n\nSubject: No Objection Certificate (NOC).\n\nDear Sir/Madam,\nThis is to certify that ${data.name || '[Name]'}, Son/Daughter of ${data.fathersName || "[Father's Name]"}, is a valued employee at our organization, serving as a ${data.designation || '[Designation]'}.\n\nWe have no objection to him/her for the purpose of ${data.purpose || '[purpose]'}. We wish him/her all the best for their future endeavors.\n\nSincerely,\n\n\n(Signature)\n${data.organizationName || '[Organization Name]'}`
+        job: (data: any, t: any) => `To,\nThe ${data.authorityName || `[${t.authorityName}]`}\n\nSubject: No Objection Certificate (NOC).\n\nDear Sir/Madam,\nThis is to certify that ${data.name || `[${t.name}]`}, Son/Daughter of ${data.fathersName || `[${t.fathersName}]`}, is a valued employee at our organization, serving as a ${data.designation || `[${t.designation}]`}.\n\nWe have no objection to him/her for the purpose of ${data.purpose || `[${t.purpose}]`}. We wish him/her all the best for their future endeavors.\n\nSincerely,\n\n\n(${t.signature})\n${data.organizationName || `[${t.organizationName}]`}`
     }
 };
 
-// --- Add other templates similarly ---
 const allTemplates = {
     bn: {
         ...nocTemplates.bn,
-        travel: (data: any) => `... (ভ্রমণের জন্য টেমপ্লেট) ...`,
-        vehicle: (data: any) => `... (গাড়ির জন্য টেমপ্লেট) ...`,
+        travel: (data: any, t: any) => `Template for travel in Bengali...`,
+        vehicle: (data: any, t: any) => `Template for vehicle in Bengali...`,
     },
     en: {
         ...nocTemplates.en,
-        travel: (data: any) => `... (Template for travel) ...`,
-        vehicle: (data: any) => `... (Template for vehicle) ...`,
+        travel: (data: any, t: any) => `Template for travel in English...`,
+        vehicle: (data: any, t: any) => `Template for vehicle in English...`,
     }
 }
-
 
 const FormSchema = z.object({
     lang: z.enum(['bn', 'en']),
@@ -157,7 +151,7 @@ export default function NocLetterGenerator() {
         resolver: zodResolver(FormSchema),
         defaultValues: {
             lang: 'bn',
-            letterType: '',
+            letterType: 'job',
             name: '',
             fathersName: '',
             purpose: '',
@@ -173,45 +167,67 @@ export default function NocLetterGenerator() {
         const { letterType, ...data } = watchedValues;
         if (letterType) {
             // @ts-ignore
-            const templateFunction = allTemplates[lang][letterType] || ((d) => `Template for ${letterType} is not available.`);
-            const letter = templateFunction(data);
+            const templateFunction = allTemplates[lang][letterType] || ((d, tr) => `Template for ${letterType} is not available in ${lang}.`);
+            const letter = templateFunction(data, t);
             setGeneratedLetter(letter);
         }
-    }, [watchedValues, lang]);
-    
+    }, [watchedValues, lang, t]);
+
     useEffect(() => {
         setIssueDate(format(new Date(), 'PP', { locale: lang === 'bn' ? bn : enUS }));
     }, [lang]);
 
-     const handleReset = () => {
-        reset();
+    const handleReset = () => {
+        reset({
+            lang: lang,
+            letterType: 'job',
+            name: '',
+            fathersName: '',
+            purpose: '',
+            authorityName: '',
+            designation: '',
+            organizationName: '',
+        });
         setGeneratedLetter('');
     };
 
     const handleCopy = () => {
         if (letterPreviewRef.current) {
-            navigator.clipboard.writeText(letterPreviewRef.current.innerText);
+            const letterText = `${t.issueDate}: ${issueDate}\n\n${letterPreviewRef.current.innerText}`;
+            navigator.clipboard.writeText(letterText);
             toast({
                 title: t.copiedSuccess,
             });
         }
     };
     
-    // Placeholder for DOC download
-    const handleDownloadDoc = async () => {
-       alert("DOC download feature is coming soon!");
+    const handleDownloadDoc = () => {
+       toast({ title: "Coming Soon!", description: "DOC download feature will be available soon." });
     };
     
-    // Placeholder for PDF download
-    const handleDownloadPdf = async () => {
-        alert("PDF download feature is coming soon!");
+    const handleDownloadPdf = () => {
+        toast({ title: "Coming Soon!", description: "PDF download feature will be available soon." });
     };
     
-    // Placeholder for Print
     const handlePrint = () => {
-        alert("Print feature is coming soon!");
+        const previewElement = letterPreviewRef.current;
+        if (previewElement) {
+            const printWindow = window.open('', '', 'height=600,width=800');
+            if (printWindow) {
+                printWindow.document.write('<html><head><title>Print NOC</title>');
+                printWindow.document.write('<style> body { font-family: sans-serif; white-space: pre-wrap; } </style>');
+                printWindow.document.write('</head><body>');
+                printWindow.document.write(`<p>${t.issueDate}: ${issueDate}</p>`);
+                printWindow.document.write(previewElement.innerHTML.replace(/\n/g, '<br>'));
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+                printWindow.focus();
+                printWindow.print();
+            } else {
+                 toast({ title: t.printError, variant: "destructive" });
+            }
+        }
     };
-
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -223,7 +239,7 @@ export default function NocLetterGenerator() {
                 <CardContent className="space-y-4">
                     <form>
                         <div className="space-y-4">
-                             <div>
+                            <div>
                                 <Label>{t.language}</Label>
                                 <Controller
                                     name="lang"
@@ -232,8 +248,9 @@ export default function NocLetterGenerator() {
                                         <Tabs
                                             defaultValue={field.value}
                                             onValueChange={(value) => {
-                                                field.onChange(value);
-                                                setLang(value as 'bn' | 'en');
+                                                const newLang = value as 'bn' | 'en';
+                                                field.onChange(newLang);
+                                                setLang(newLang);
                                             }}
                                             className="w-full mt-1"
                                         >
@@ -264,7 +281,7 @@ export default function NocLetterGenerator() {
                                         </Select>
                                     )}
                                 />
-                                 {errors.letterType && <p className="text-red-500 text-xs mt-1">{errors.letterType.message}</p>}
+                                {errors.letterType && <p className="text-red-500 text-xs mt-1">{errors.letterType.message}</p>}
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -276,11 +293,11 @@ export default function NocLetterGenerator() {
                                 <div>
                                     <Label htmlFor="fathersName">{t.fathersName}</Label>
                                     <Controller name="fathersName" control={control} render={({ field }) => <Input id="fathersName" {...field} />} />
-                                     {errors.fathersName && <p className="text-red-500 text-xs mt-1">{errors.fathersName.message}</p>}
+                                    {errors.fathersName && <p className="text-red-500 text-xs mt-1">{errors.fathersName.message}</p>}
                                 </div>
                             </div>
                             
-                             <div>
+                            <div>
                                 <Label htmlFor="authorityName">{t.authorityName}</Label>
                                 <Controller name="authorityName" control={control} render={({ field }) => <Input id="authorityName" {...field} />} />
                                 {errors.authorityName && <p className="text-red-500 text-xs mt-1">{errors.authorityName.message}</p>}
@@ -288,23 +305,22 @@ export default function NocLetterGenerator() {
                             
                             {['job'].includes(watchedValues.letterType) && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <Label htmlFor="designation">{t.designation}</Label>
-                                    <Controller name="designation" control={control} render={({ field }) => <Input id="designation" {...field} />} />
+                                    <div>
+                                        <Label htmlFor="designation">{t.designation}</Label>
+                                        <Controller name="designation" control={control} render={({ field }) => <Input id="designation" {...field} />} />
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="organizationName">{t.organizationName}</Label>
+                                        <Controller name="organizationName" control={control} render={({ field }) => <Input id="organizationName" {...field} />} />
+                                    </div>
                                 </div>
-                                <div>
-                                    <Label htmlFor="organizationName">{t.organizationName}</Label>
-                                    <Controller name="organizationName" control={control} render={({ field }) => <Input id="organizationName" {...field} />} />
-                                </div>
-                               </div>
                             )}
 
-                             <div>
+                            <div>
                                 <Label htmlFor="purpose">{t.purpose}</Label>
                                 <Controller name="purpose" control={control} render={({ field }) => <Input id="purpose" {...field} />} />
                                 {errors.purpose && <p className="text-red-500 text-xs mt-1">{errors.purpose.message}</p>}
                             </div>
-                            
                         </div>
                     </form>
                 </CardContent>
@@ -316,9 +332,9 @@ export default function NocLetterGenerator() {
                         <CardTitle>{t.preview}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div ref={letterPreviewRef} className="p-6 border rounded-md min-h-[400px] whitespace-pre-wrap bg-background text-sm">
+                        <div className="p-6 border rounded-md min-h-[400px] bg-background">
                             <p className="mb-4">{t.issueDate}: {issueDate}</p>
-                            {generatedLetter}
+                            <div ref={letterPreviewRef} className="whitespace-pre-wrap text-sm">{generatedLetter}</div>
                         </div>
                     </CardContent>
                 </Card>
