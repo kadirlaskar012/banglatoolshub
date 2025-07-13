@@ -4,25 +4,34 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
+import { CheckCircle, Terminal, XCircle } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 interface HighlightedSentence {
   text: string;
   isDuplicate: boolean;
 }
 
+interface PlagiarismResult {
+    highlightedContent: HighlightedSentence[];
+    uniquePercentage: number;
+    duplicatePercentage: number;
+}
+
 // Placeholder for future API integration
-const checkPlagiarismWithApi = async (text: string) => {
+const checkPlagiarismWithApi = async (text: string): Promise<PlagiarismResult> => {
   console.log("API Mode is not implemented yet.");
   // In the future, you would make an API call here.
-  // For now, it returns no duplicates.
-  return new Promise<HighlightedSentence[]>((resolve) => {
+  return new Promise((resolve) => {
     setTimeout(() => {
-      resolve([{ text, isDuplicate: false }]);
+      resolve({
+        highlightedContent: [{ text, isDuplicate: false }],
+        uniquePercentage: 100,
+        duplicatePercentage: 0,
+      });
     }, 2000);
   });
 };
@@ -30,31 +39,29 @@ const checkPlagiarismWithApi = async (text: string) => {
 
 export default function AiPlagiarismChecker() {
   const [text, setText] = useState('');
-  const [results, setResults] = useState<HighlightedSentence[]>([]);
+  const [result, setResult] = useState<PlagiarismResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isApiMode, setIsApiMode] = useState(false);
   const { toast } = useToast();
 
-  const handleOfflineCheck = (inputText: string) => {
+  const handleOfflineCheck = (inputText: string): PlagiarismResult | null => {
     if (!inputText.trim()) {
-        setResults([]);
-        return;
+        return null;
     }
 
-    // Split text into sentences by period, question mark, exclamation mark, or newline
     const sentences = inputText.split(/(?<=[.?!।\n])\s*/).filter(s => s.trim().length > 0);
-    const sentenceCounts: { [key: string]: number } = {};
+    if (sentences.length === 0) return null;
 
-    // Count occurrences of each sentence (case-insensitive and trimmed)
-    sentences.forEach(sentence => {
-      const cleanedSentence = sentence.trim().toLowerCase();
+    const sentenceCounts: { [key: string]: number } = {};
+    const cleanedSentences = sentences.map(s => s.trim().toLowerCase());
+
+    cleanedSentences.forEach(cleanedSentence => {
       if (cleanedSentence) {
         sentenceCounts[cleanedSentence] = (sentenceCounts[cleanedSentence] || 0) + 1;
       }
     });
     
-    // Map sentences to results with duplication flag
-    const highlightedSentences = sentences.map(sentence => {
+    const highlightedContent = sentences.map(sentence => {
       const cleanedSentence = sentence.trim().toLowerCase();
       return {
         text: sentence,
@@ -62,10 +69,29 @@ export default function AiPlagiarismChecker() {
       };
     });
 
-    setResults(highlightedSentences);
+    const duplicateSentenceCount = Object.values(sentenceCounts).filter(count => count > 1).length;
+    const totalSentences = Object.keys(sentenceCounts).length;
+    
+    const duplicatePercentage = totalSentences > 0 ? Math.round((duplicateSentenceCount / totalSentences) * 100) : 0;
+    const uniquePercentage = 100 - duplicatePercentage;
+
+    return {
+        highlightedContent,
+        uniquePercentage,
+        duplicatePercentage,
+    };
   };
 
   const handleCheck = async () => {
+    if (text.trim().length < 10) {
+        toast({
+            title: "ত্রুটি",
+            description: "অনুগ্রহ করে যাচাই করার জন্য যথেষ্ট লেখা দিন।",
+            variant: "destructive",
+        });
+        return;
+    }
+
     if (isApiMode) {
       toast({
         title: "শীঘ্রই আসছে!",
@@ -75,25 +101,23 @@ export default function AiPlagiarismChecker() {
     }
 
     setIsLoading(true);
-    setResults([]);
+    setResult(null);
 
     // Offline check logic
-    setTimeout(() => { // Simulating a short delay for better UX
-      handleOfflineCheck(text);
+    setTimeout(() => {
+      const checkResult = handleOfflineCheck(text);
+      setResult(checkResult);
       setIsLoading(false);
     }, 500);
-
   };
 
-  const hasDuplicates = results.some(r => r.isDuplicate);
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h3 className="font-semibold text-lg">আপনার লেখাটি দিন</h3>
-        <div className="flex gap-2">
-            <Button variant={!isApiMode ? 'default' : 'outline'} onClick={() => setIsApiMode(false)}>অফলাইন মোড</Button>
-            <Button variant={isApiMode ? 'default' : 'outline'} onClick={() => setIsApiMode(true)}>অনলাইন মোড</Button>
+        <div className="flex items-center gap-2 p-1 rounded-full border bg-muted w-fit">
+            <Button size="sm" variant={!isApiMode ? 'default' : 'ghost'} onClick={() => setIsApiMode(false)} className="rounded-full">অফলাইন মোড</Button>
+            <Button size="sm" variant={isApiMode ? 'default' : 'ghost'} onClick={() => setIsApiMode(true)} className="rounded-full">অনলাইন মোড</Button>
         </div>
       </div>
 
@@ -111,34 +135,59 @@ export default function AiPlagiarismChecker() {
         placeholder="আপনার বাংলা লেখাটি এখানে পেস্ট করুন..."
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="min-h-[200px] text-base"
+        className="min-h-[250px] text-base"
         disabled={isLoading}
       />
-      <Button onClick={handleCheck} disabled={isLoading || !text.trim()} className="w-full md:w-auto">
+      <Button onClick={handleCheck} disabled={isLoading || !text.trim()} className="w-full md:w-auto text-lg py-6">
         {isLoading ? 'যাচাই করা হচ্ছে...' : 'মৌলিকতা যাচাই করুন'}
       </Button>
 
-      {results.length > 0 && (
+      {result && (
         <Card className="mt-4">
           <CardHeader>
             <CardTitle>বিশ্লেষণের ফলাফল</CardTitle>
             <CardDescription>
-                {hasDuplicates ? "আপনার লেখায় পুনরাবৃত্তিমূলক বাক্য পাওয়া গেছে (লাল চিহ্নিত)।" : "আপনার লেখায় কোনো পুনরাবৃত্তিমূলক বাক্য পাওয়া যায়নি।"}
+                আপনার লেখার মৌলিকতা এবং পুনরাবৃত্তির হার নিচে দেওয়া হলো।
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="prose prose-lg max-w-none rounded-md border bg-secondary/20 p-4 max-h-96 overflow-y-auto">
-              <p>
-                {results.map((sentence, index) => (
-                  <span
-                    key={index}
-                    className={sentence.isDuplicate ? 'bg-red-200 dark:bg-red-800/50 rounded' : ''}
-                  >
-                    {sentence.text}
-                  </span>
-                ))}
-              </p>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-3">
+                        <CheckCircle className="w-8 h-8 text-green-600"/>
+                        <div>
+                            <p className="text-sm text-muted-foreground">মৌলিকতার হার</p>
+                            <p className="text-2xl font-bold">{result.uniquePercentage.toLocaleString('bn-BD')}%</p>
+                        </div>
+                    </div>
+                </Card>
+                <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+                    <div className="flex items-center gap-3">
+                        <XCircle className="w-8 h-8 text-red-600"/>
+                        <div>
+                            <p className="text-sm text-muted-foreground">পুনরাবৃত্তির হার</p>
+                            <p className="text-2xl font-bold">{result.duplicatePercentage.toLocaleString('bn-BD')}%</p>
+                        </div>
+                    </div>
+                </Card>
             </div>
+
+            <div>
+                <h4 className="font-semibold mb-2">বিশ্লেষণমূলক লেখা:</h4>
+                <div className="prose prose-lg max-w-none rounded-md border bg-secondary/20 p-4 max-h-96 overflow-y-auto">
+                <p>
+                    {result.highlightedContent.map((sentence, index) => (
+                    <span
+                        key={index}
+                        className={sentence.isDuplicate ? 'bg-red-200 dark:bg-red-800/50 rounded' : ''}
+                    >
+                        {sentence.text}
+                    </span>
+                    ))}
+                </p>
+                </div>
+            </div>
+
           </CardContent>
         </Card>
       )}
