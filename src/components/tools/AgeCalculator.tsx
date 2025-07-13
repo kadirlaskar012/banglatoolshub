@@ -168,9 +168,8 @@ export default function AgeCalculator() {
                 url: window.location.href,
             });
         } catch (error) {
-            // Handle errors like user dismissing the share sheet or permission denial
-            console.error('শেয়ার করতে সমস্যা হয়েছে:', error);
-            // Fallback to clipboard if share fails
+            // Fallback to clipboard if share fails (e.g., user dismisses share sheet)
+            // We don't log the error as it's an expected user action (like cancellation).
             copyToClipboardFallback(textToShare);
         }
     } else {
@@ -341,3 +340,5 @@ export default function AgeCalculator() {
     </div>
   );
 }
+
+    
