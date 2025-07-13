@@ -101,10 +101,10 @@ const translations = {
 
 const nocTemplates = {
     bn: {
-        job: (data: any) => `বরাবর,\n${data.authorityName || '[কর্তৃপক্ষের নাম]'}\n\nবিষয়: অনাপত্তিপত্র (No Objection Certificate) প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাইতেছে যে, ${data.name || '[নাম]'}, পিতা: ${data.fathersName || '[পিতার নাম]'}, আমাদের প্রতিষ্ঠানে একজন ${data.designation || '[পদবি]'} হিসেবে কর্মরত আছেন।\n\nতার ${data.purpose || '[উদ্দেশ্য]'} এর জন্য আমাদের পক্ষ থেকে কোনো আপত্তি নেই। আমরা তার সার্বিক সাফল্য কামনা করি।\n\nবিনীত,\n(স্বাক্ষর)\n${data.organizationName || '[প্রতিষ্ঠানের নাম]'}`
+        job: (data: any) => `বরাবর,\n${data.authorityName || '[কর্তৃপক্ষের নাম]'}\n\nবিষয়: অনাপত্তিপত্র (No Objection Certificate) প্রসঙ্গে।\n\nজনাব,\nএই মর্মে প্রত্যয়ন করা যাইতেছে যে, ${data.name || '[নাম]'}, পিতা: ${data.fathersName || '[পিতার নাম]'}, আমাদের প্রতিষ্ঠানে একজন ${data.designation || '[পদবি]'} হিসেবে কর্মরত আছেন।\n\nতার ${data.purpose || '[উদ্দেশ্য]'} এর জন্য আমাদের পক্ষ থেকে কোনো আপত্তি নেই। আমরা তার সার্বিক সাফল্য কামনা করি।\n\nবিনীত,\n\n\n(স্বাক্ষর)\n${data.organizationName || '[প্রতিষ্ঠানের নাম]'}`
     },
     en: {
-        job: (data: any) => `To,\nThe ${data.authorityName || '[Authority Name]'}\n\nSubject: No Objection Certificate (NOC).\n\nDear Sir/Madam,\nThis is to certify that ${data.name || '[Name]'}, Son/Daughter of ${data.fathersName || "[Father's Name]"}, is a valued employee at our organization, serving as a ${data.designation || '[Designation]'}.\n\nWe have no objection to him/her for the purpose of ${data.purpose || '[purpose]'}. We wish him/her all the best for their future endeavors.\n\nSincerely,\n(Signature)\n${data.organizationName || '[Organization Name]'}`
+        job: (data: any) => `To,\nThe ${data.authorityName || '[Authority Name]'}\n\nSubject: No Objection Certificate (NOC).\n\nDear Sir/Madam,\nThis is to certify that ${data.name || '[Name]'}, Son/Daughter of ${data.fathersName || "[Father's Name]"}, is a valued employee at our organization, serving as a ${data.designation || '[Designation]'}.\n\nWe have no objection to him/her for the purpose of ${data.purpose || '[purpose]'}. We wish him/her all the best for their future endeavors.\n\nSincerely,\n\n\n(Signature)\n${data.organizationName || '[Organization Name]'}`
     }
 };
 
@@ -162,6 +162,8 @@ export default function NocLetterGenerator() {
             fathersName: '',
             purpose: '',
             authorityName: '',
+            designation: '',
+            organizationName: '',
         },
     });
 
@@ -250,7 +252,7 @@ export default function NocLetterGenerator() {
                                     name="letterType"
                                     control={control}
                                     render={({ field }) => (
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value}>
                                             <SelectTrigger id="letterType">
                                                 <SelectValue placeholder={t.selectLetterType} />
                                             </SelectTrigger>
