@@ -233,10 +233,16 @@ const OneTimeInvestmentCalculator = ({ language }: CalculatorProps) => {
         downloadText += `- ${t.futureValue}: ${formatCurrency(futureValue)}\n\n`;
 
         if (breakdown.length > 0) {
-            downloadText += `${t.downloadBreakdownTitle}:\n-----------------------------\n`;
-            downloadText += `${t.year}\t${t.openingBalance}\t${t.interestEarned}\t${t.closingBalance}\n`;
+            downloadText += `${t.downloadBreakdownTitle}:\n--------------------------------------------------------------\n`;
+            const header = `${t.year.padEnd(5)} | ${t.openingBalance.padEnd(20)} | ${t.interestEarned.padEnd(20)} | ${t.closingBalance.padEnd(20)}\n`;
+            downloadText += header;
+            downloadText += `--------------------------------------------------------------\n`;
             breakdown.forEach(row => {
-                downloadText += `${row.year}\t${formatCurrency(row.openingBalance)}\t${formatCurrency(row.interestEarned)}\t${formatCurrency(row.closingBalance)}\n`;
+                const yearStr = String(row.year).padEnd(5);
+                const openingStr = formatCurrency(row.openingBalance).padEnd(20);
+                const interestStr = formatCurrency(row.interestEarned).padEnd(20);
+                const closingStr = formatCurrency(row.closingBalance).padEnd(20);
+                downloadText += `${yearStr} | ${openingStr} | ${interestStr} | ${closingStr}\n`;
             });
         }
         
@@ -454,7 +460,7 @@ const SIPCalculator = ({ language }: CalculatorProps) => {
             chartData: chartDataPoints,
             breakdown: breakdownData,
         };
-    }, [monthlyInvestment, rate, years, language]);
+    }, [monthlyInvestment, rate, years, language, t.totalInvestmentChart, t.totalReturnsChart]);
     
     const handleShare = async () => {
         const { futureValue, totalInvestment, totalReturns } = calculationResult;
@@ -498,10 +504,17 @@ const SIPCalculator = ({ language }: CalculatorProps) => {
         downloadText += `- ${t.futureValue}: ${formatCurrency(futureValue)}\n\n`;
 
         if (breakdown.length > 0) {
-            downloadText += `${t.downloadBreakdownTitle}:\n-----------------------------\n`;
-            downloadText += `${t.year}\t${t.openingBalance}\t${t.interestEarned}\t${t.closingBalance}\n`;
+            downloadText += `${t.downloadBreakdownTitle}:\n--------------------------------------------------------------\n`;
+            const header = `${t.year.padEnd(5)} | ${t.openingBalance.padEnd(20)} | ${t.interestEarned.padEnd(20)} | ${t.closingBalance.padEnd(20)}\n`;
+            downloadText += header;
+            downloadText += `--------------------------------------------------------------\n`;
+
             breakdown.forEach(row => {
-                downloadText += `${row.year}\t${formatCurrency(row.openingBalance)}\t${formatCurrency(row.interestEarned)}\t${formatCurrency(row.closingBalance)}\n`;
+                const yearStr = String(row.year).padEnd(5);
+                const openingStr = formatCurrency(row.openingBalance).padEnd(20);
+                const interestStr = formatCurrency(row.interestEarned).padEnd(20);
+                const closingStr = formatCurrency(row.closingBalance).padEnd(20);
+                downloadText += `${yearStr} | ${openingStr} | ${interestStr} | ${closingStr}\n`;
             });
         }
         
