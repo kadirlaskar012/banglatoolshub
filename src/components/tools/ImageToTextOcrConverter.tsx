@@ -59,12 +59,12 @@ export default function ImageToTextOcrConverter() {
     setStatus('ওয়ার্কার লোড হচ্ছে...');
 
     const worker = await createWorker({
-      logger: (m) => {
+      logger: m => {
         if (m.status === 'recognizing text') {
-          setStatus('লেখা শনাক্ত করা হচ্ছে...');
-          setProgress(Math.round(m.progress * 100));
+            setStatus('লেখা শনাক্ত করা হচ্ছে...');
+            setProgress(Math.round(m.progress * 100));
         } else {
-          setStatus(m.status);
+            setStatus(m.status);
         }
       },
     });
@@ -72,6 +72,7 @@ export default function ImageToTextOcrConverter() {
     try {
       await worker.loadLanguage(language);
       await worker.initialize(language);
+      setStatus('লেখা শনাক্ত করা হচ্ছে...');
       const { data: { text: extractedText } } = await worker.recognize(file);
       setText(extractedText);
       toast({
