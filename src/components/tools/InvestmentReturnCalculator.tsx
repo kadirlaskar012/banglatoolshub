@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -13,6 +13,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Share2 } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import html2canvas from 'html2canvas';
 
 interface BreakdownRow {
     year: number;
@@ -32,6 +35,8 @@ const OneTimeInvestmentCalculator = () => {
     const [compounding, setCompounding] = useState(1); // Yearly
     const [adjustForInflation, setAdjustForInflation] = useState(false);
     const [inflationRate, setInflationRate] = useState(6);
+    const { toast } = useToast();
+    const resultCardRef = useRef<HTMLDivElement>(null);
 
     const { futureValue, totalInvestment, totalInterest, realReturnValue, breakdown, chartData } = useMemo(() => {
         const p = Number(principal);
@@ -80,6 +85,51 @@ const OneTimeInvestmentCalculator = () => {
         };
     }, [principal, rate, years, compounding, adjustForInflation, inflationRate]);
     
+    const handleShare = async () => {
+        const element = resultCardRef.current;
+        if (!element) return;
+
+        try {
+            const canvas = await html2canvas(element, { 
+                backgroundColor: 'hsl(var(--background))', 
+                scale: 2 
+            });
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    toast({ title: "ত্রুটি", description: "ছবি তৈরি করা সম্ভব হয়নি।", variant: "destructive" });
+                    return;
+                }
+                
+                const file = new File([blob], "investment-result.png", { type: "image/png" });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            title: 'আমার বিনিয়োগের ফলাফল',
+                            text: 'আমার এককালীন বিনিয়োগের সম্ভাব্য ফলাফল দেখুন।',
+                            files: [file],
+                        });
+                    } catch (err) {
+                       toast({
+                            title: "শেয়ার বাতিল হয়েছে",
+                            description: "আপনি শেয়ার করার প্রক্রিয়াটি বাতিল করেছেন।",
+                       });
+                    }
+                } else {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'investment-result.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    toast({ title: "ডাউনলোড হয়েছে!", description: "ফলাফলের ছবিটি ডাউনলোড করা হয়েছে।" });
+                }
+            });
+        } catch (err) {
+            toast({ title: "ত্রুটি", description: "ফলাফল শেয়ার বা ডাউনলোড করা সম্ভব হয়নি।", variant: "destructive" });
+        }
+    };
+
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
@@ -129,10 +179,16 @@ const OneTimeInvestmentCalculator = () => {
                     </CardContent>
                 </Card>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-6" ref={resultCardRef}>
                 <Card className="w-full text-center bg-primary/5">
                     <CardHeader>
-                        <CardTitle className="font-headline">সম্ভাব্য ফলাফল</CardTitle>
+                        <div className="flex justify-between items-center">
+                            <CardTitle className="font-headline">সম্ভাব্য ফলাফল</CardTitle>
+                             <Button variant="ghost" size="icon" onClick={handleShare}>
+                                <Share2 className="w-5 h-5"/>
+                                <span className="sr-only">ফলাফল শেয়ার করুন</span>
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
                         <div className="grid grid-cols-2 gap-2 text-sm">
@@ -215,6 +271,8 @@ const SIPCalculator = () => {
     const [monthlyInvestment, setMonthlyInvestment] = useState(5000);
     const [rate, setRate] = useState(12);
     const [years, setYears] = useState(10);
+    const { toast } = useToast();
+    const resultCardRef = useRef<HTMLDivElement>(null);
     
     const { futureValue, totalInvestment, totalReturns, chartData } = useMemo(() => {
         const p = Number(monthlyInvestment);
@@ -256,6 +314,51 @@ const SIPCalculator = () => {
         };
     }, [monthlyInvestment, rate, years]);
     
+     const handleShare = async () => {
+        const element = resultCardRef.current;
+        if (!element) return;
+
+        try {
+            const canvas = await html2canvas(element, { 
+                backgroundColor: 'hsl(var(--background))', 
+                scale: 2 
+            });
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    toast({ title: "ত্রুটি", description: "ছবি তৈরি করা সম্ভব হয়নি।", variant: "destructive" });
+                    return;
+                }
+                
+                const file = new File([blob], "sip-result.png", { type: "image/png" });
+                
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            title: 'আমার SIP বিনিয়োগের ফলাফল',
+                            text: 'আমার মাসিক বিনিয়োগের (SIP) সম্ভাব্য ফলাফল দেখুন।',
+                            files: [file],
+                        });
+                    } catch (err) {
+                       toast({
+                            title: "শেয়ার বাতিল হয়েছে",
+                            description: "আপনি শেয়ার করার প্রক্রিয়াটি বাতিল করেছেন।",
+                       });
+                    }
+                } else {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = 'sip-result.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    toast({ title: "ডাউনলোড হয়েছে!", description: "ফলাফলের ছবিটি ডাউনলোড করা হয়েছে।" });
+                }
+            });
+        } catch (err) {
+            toast({ title: "ত্রুটি", description: "ফলাফল শেয়ার বা ডাউনলোড করা সম্ভব হয়নি।", variant: "destructive" });
+        }
+    };
+
      return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
@@ -275,10 +378,16 @@ const SIPCalculator = () => {
                     <Slider value={[years]} onValueChange={([val]) => setYears(val)} max={40} step={1} className="mt-2" />
                 </div>
             </div>
-            <div className="space-y-6">
+            <div className="space-y-6" ref={resultCardRef}>
                  <Card className="w-full text-center bg-primary/5">
                     <CardHeader>
-                        <CardTitle className="font-headline">সম্ভাব্য ফলাফল</CardTitle>
+                        <div className="flex justify-between items-center">
+                            <CardTitle className="font-headline">সম্ভাব্য ফলাফল</CardTitle>
+                            <Button variant="ghost" size="icon" onClick={handleShare}>
+                                <Share2 className="w-5 h-5"/>
+                                <span className="sr-only">ফলাফল শেয়ার করুন</span>
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
                          <div className="grid grid-cols-2 gap-2 text-sm">
@@ -308,8 +417,8 @@ const SIPCalculator = () => {
                                     <XAxis dataKey="year" fontSize={12} tickLine={false} axisLine={false} unit=" বছর" />
                                     <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${Number(value) / 100000}L`} />
                                     <Tooltip formatter={(value) => [formatCurrency(Number(value)), ""]} />
-                                    <Area type="monotone" dataKey="বিনিয়োগ" stackId="1" stroke="#8884d8" fill="#8884d8" fillOpacity={0.2} />
-                                    <Area type="monotone" dataKey="মোট মূল্য" stackId="1" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} />
+                                    <Area type="monotone" dataKey="বিনিয়োগ" stackId="1" name="মোট বিনিয়োগ" stroke="#8884d8" fill="#8884d8" fillOpacity={0.2} />
+                                    <Area type="monotone" dataKey="মোট মূল্য" stackId="1" name="মোট রিটার্ন" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
                                 </AreaChart>
                             </ResponsiveContainer>
                         </CardContent>
@@ -337,4 +446,3 @@ export default function InvestmentReturnCalculator() {
         </Tabs>
     );
 }
-
