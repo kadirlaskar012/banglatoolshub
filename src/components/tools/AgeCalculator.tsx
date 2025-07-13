@@ -3,11 +3,15 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Share2 } from 'lucide-react';
+import { Share2, CalendarIcon } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { bn } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface AgeResult {
   years: number;
@@ -29,14 +33,15 @@ interface TotalResult {
 }
 
 export default function AgeCalculator() {
-  const [dob, setDob] = useState<string>('');
+  const [dob, setDob] = useState<Date>();
   const [result, setResult] = useState<AgeResult | null>(null);
   const [totalResult, setTotalResult] = useState<TotalResult | null>(null);
   const { toast } = useToast();
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (result) {
+    if (result && dob) {
       timer = setInterval(() => {
         calculateAge(dob, false);
       }, 1000);
@@ -44,21 +49,25 @@ export default function AgeCalculator() {
     return () => clearInterval(timer);
   }, [result, dob]);
 
-  const calculateAge = (dateString: string, showAlerts = true) => {
-    if (!dateString) {
+  const handleDateSelect = (date: Date | undefined) => {
+    setDob(date);
+    setIsPopoverOpen(false);
+  }
+
+  const calculateAge = (birthDate: Date | undefined, showAlerts = true) => {
+    if (!birthDate) {
       setResult(null);
       setTotalResult(null);
-      if (showAlerts) alert("দয়া করে আপনার জন্ম তারিখ দিন!");
+      if (showAlerts) toast({ title: "ত্রুটি", description: "দয়া করে আপনার জন্ম তারিখ দিন!", variant: "destructive" });
       return;
     }
 
-    const birthDate = new Date(dateString);
     const now = new Date();
     
     if (birthDate > now) {
         setResult(null);
         setTotalResult(null);
-        if (showAlerts) alert("জন্ম তারিখ আজকের তারিখের পরে হতে পারে না।");
+        if (showAlerts) toast({ title: "ত্রুটি", description: "জন্ম তারিখ আজকের তারিখের পরে হতে পারে না।", variant: "destructive"});
         return;
     }
 
@@ -135,23 +144,40 @@ export default function AgeCalculator() {
   };
 
 
-  const todayString = new Date().toISOString().split('T')[0];
-
   return (
     <div className="flex flex-col items-center space-y-6 max-w-2xl mx-auto">
       <div className="w-full space-y-2 text-center">
         <Label htmlFor="dob" className="text-lg font-medium">আপনার জন্ম তারিখ</Label>
-        <Input
-          id="dob"
-          type="date"
-          value={dob}
-          onChange={(e) => setDob(e.target.value)}
-          className="text-lg p-4 mx-auto max-w-xs"
-          max={todayString}
-        />
+        <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+            <PopoverTrigger asChild>
+                <Button
+                variant={"outline"}
+                className={cn(
+                    "w-full max-w-xs justify-start text-left font-normal text-lg p-4",
+                    !dob && "text-muted-foreground"
+                )}
+                >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dob ? format(dob, "PPP", { locale: bn }) : <span>আপনার জন্ম তারিখ বাছুন</span>}
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+                <Calendar
+                mode="single"
+                selected={dob}
+                onSelect={handleDateSelect}
+                initialFocus
+                disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                locale={bn}
+                captionLayout="dropdown-buttons"
+                fromYear={1900}
+                toYear={new Date().getFullYear()}
+                />
+            </PopoverContent>
+        </Popover>
       </div>
       
-      <Button onClick={() => calculateAge(dob)} size="lg" className="w-full max-w-xs text-lg">
+      <Button onClick={() => calculateAge(dob)} size="lg" className="w-full max-w-xs text-lg" disabled={!dob}>
         বয়স গণনা করুন
       </Button>
 
@@ -239,3 +265,5 @@ export default function AgeCalculator() {
     </div>
   );
 }
+
+    
