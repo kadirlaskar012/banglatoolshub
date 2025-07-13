@@ -68,6 +68,8 @@ export default function GstVatCalculator() {
     };
     
     const saveToHistory = useCallback((calcResult: any) => {
+        if (!calcResult || typeof calcResult.finalPrice === 'undefined') return;
+
         const newHistoryItem: HistoryItem = {
             id: new Date().toISOString(),
             items,
@@ -152,7 +154,12 @@ export default function GstVatCalculator() {
         return () => clearTimeout(handler);
     }, [items, mode, transactionType, country, saveToHistory, totalCalculation]);
 
-    const formatCurrency = (value: number) => `${value.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} টাকা`;
+    const formatCurrency = (value: number) => {
+        if (value === null || typeof value === 'undefined') {
+          return `0.00 টাকা`;
+        }
+        return `${value.toLocaleString('bn-BD', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} টাকা`;
+      };
     
     const handleShare = async () => {
         const { totalTaxableValue, totalTaxAmount, finalPrice, cgst, sgst, igst } = totalCalculation;
