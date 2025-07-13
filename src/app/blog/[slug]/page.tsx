@@ -34,12 +34,26 @@ const getHeadings = (htmlContent: string) => {
 };
 
 const BlogSchemaMarkup = ({ post }: { post: BlogPost }) => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+
+    const websiteSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Bangla Tools HUB',
+        url: baseUrl,
+        potentialAction: {
+            '@type': 'SearchAction',
+            target: `${baseUrl}/blog?q={search_term_string}`,
+            'query-input': 'required name=search_term_string',
+        },
+    };
+
     const articleSchema = {
       '@context': 'https://schema.org',
       '@type': 'Article',
       mainEntityOfPage: {
         '@type': 'WebPage',
-        '@id': `${process.env.NEXT_PUBLIC_BASE_URL || ''}/blog/${post.slug}`,
+        '@id': `${baseUrl}/blog/${post.slug}`,
       },
       headline: post.title,
       description: post.excerpt,
@@ -53,7 +67,7 @@ const BlogSchemaMarkup = ({ post }: { post: BlogPost }) => {
         name: 'Bangla Tools HUB',
         logo: {
           '@type': 'ImageObject',
-          url: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/logo.png`,
+          url: `${baseUrl}/logo.png`,
         },
       },
       datePublished: post.publishedAt,
@@ -80,13 +94,13 @@ const BlogSchemaMarkup = ({ post }: { post: BlogPost }) => {
                 '@type': 'ListItem',
                 position: 1,
                 name: 'Home',
-                item: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/`,
+                item: `${baseUrl}/`,
             },
             {
                 '@type': 'ListItem',
                 position: 2,
                 name: 'Blog',
-                item: `${process.env.NEXT_PUBLIC_BASE_URL || ''}/blog`,
+                item: `${baseUrl}/blog`,
             },
             {
                 '@type': 'ListItem',
@@ -98,6 +112,10 @@ const BlogSchemaMarkup = ({ post }: { post: BlogPost }) => {
   
     return (
       <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}

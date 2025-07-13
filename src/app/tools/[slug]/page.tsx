@@ -80,6 +80,44 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
 }
 
 const ToolSchemaMarkup = ({ tool }: { tool: Tool }) => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+
+    const websiteSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'Bangla Tools HUB',
+        url: baseUrl,
+        potentialAction: {
+            '@type': 'SearchAction',
+            target: `${baseUrl}/tools?q={search_term_string}`,
+            'query-input': 'required name=search_term_string',
+        },
+    };
+
+    const breadcrumbSchema = {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: `${baseUrl}/`,
+            },
+            {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Tools',
+                item: `${baseUrl}/tools`,
+            },
+            {
+                '@type': 'ListItem',
+                position: 3,
+                name: tool.name,
+            }
+        ]
+    };
+
     const softwareSchema = {
       '@context': 'https://schema.org',
       '@type': 'SoftwareApplication',
@@ -113,19 +151,19 @@ const ToolSchemaMarkup = ({ tool }: { tool: Tool }) => {
             "@type": "HowToStep",
             "name": "ধাপ ১: তথ্য ইনপুট করুন",
             "text": "টুলের প্রয়োজনীয় ইনপুট ফিল্ডে আপনার ডেটা বা তথ্য লিখুন। যেমন, বয়স ক্যালকুলেটরের জন্য জন্ম তারিখ দিন।",
-            "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/tools/${tool.slug}#tool-interface`
+            "url": `${baseUrl}/tools/${tool.slug}#tool-interface`
         },
         {
             "@type": "HowToStep",
             "name": "ধাপ ২: গণনা/রূপান্তর করুন",
             "text": "মূল বাটনে (যেমন 'গণনা করুন' বা 'রূপান্তর করুন') ক্লিক করে প্রক্রিয়া শুরু করুন।",
-            "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/tools/${tool.slug}#tool-interface`
+            "url": `${baseUrl}/tools/${tool.slug}#tool-interface`
         },
         {
             "@type": "HowToStep",
             "name": "ধাপ ৩: ফলাফল দেখুন",
             "text": "স্ক্রিনে প্রদর্শিত ফলাফল দেখুন। প্রয়োজনে ফলাফল কপি বা শেয়ার করুন।",
-            "url": `${process.env.NEXT_PUBLIC_BASE_URL || ''}/tools/${tool.slug}#tool-interface`
+            "url": `${baseUrl}/tools/${tool.slug}#tool-interface`
         }
     ];
 
@@ -139,6 +177,14 @@ const ToolSchemaMarkup = ({ tool }: { tool: Tool }) => {
   
     return (
       <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+         <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareSchema) }}
@@ -225,7 +271,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
                         <ul className="space-y-2 list-decimal list-inside text-primary">
                             {headings.map(heading => (
                                 <li key={heading.id}>
-                                    <a href={`#${heading.id}`} className="hover:underline font-medium">
+                                    <a href={`#${heading.id}`} className="hover:underline font-medium text-foreground">
                                         {heading.text}
                                     </a>
                                 </li>
