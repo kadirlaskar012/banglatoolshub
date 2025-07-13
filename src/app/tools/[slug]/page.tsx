@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getTools, getToolBySlug } from '@/lib/data';
+import { getTools, getToolBySlug, getBlogPosts } from '@/lib/data';
 import type { Metadata } from 'next';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import AiToolSuggester from '@/components/AiToolSuggester';
@@ -8,6 +8,9 @@ import { Separator } from '@/components/ui/separator';
 import { iconMap } from '@/components/icons';
 import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { BlogPost, Tool } from '@/lib/types';
+import PostCard from '@/components/PostCard';
+import { BookText } from 'lucide-react';
 
 // Dynamically import all tool components
 const ToolComponents: { [key: string]: React.ComponentType<any> } = {
@@ -59,10 +62,16 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
 
 export default async function ToolPage({ params }: ToolPageProps) {
   const tool = await getToolBySlug(params.slug);
-
+  
   if (!tool) {
     notFound();
   }
+
+  const allPosts = await getBlogPosts();
+  // Find blog posts that are related to this tool
+  const relatedPosts = allPosts.filter(post => 
+    post.relatedTools && post.relatedTools.includes(tool.slug)
+  );
 
   const Icon = iconMap[tool.icon as keyof typeof iconMap] || null;
   const ToolComponent = ToolComponents[tool.slug] || null;
@@ -101,11 +110,37 @@ export default async function ToolPage({ params }: ToolPageProps) {
                     )}
                 </CardContent>
             </Card>
+
+            <div 
+              className="prose prose-lg max-w-none mt-12 font-body prose-headings:font-headline prose-a:text-primary hover:prose-a:text-primary/80"
+              dangerouslySetInnerHTML={{ __html: tool.contentHtml }}
+            />
+
         </div>
         <div className="lg:col-span-1">
           <AiToolSuggester content={tool.contentHtml} />
         </div>
       </div>
+
+      {relatedPosts.length > 0 && (
+        <div className="mt-16">
+          <Separator className="my-8" />
+          <div className="text-center">
+            <h2 className="text-3xl font-bold font-headline flex items-center justify-center gap-3">
+              <BookText className="w-8 h-8 text-primary"/>
+              সম্পর্কিত ব্লগ পোস্ট
+            </h2>
+            <p className="mt-2 text-lg text-muted-foreground">
+              এই টুলটি সম্পর্কে আরও জানতে পড়ুন।
+            </p>
+          </div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {relatedPosts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
