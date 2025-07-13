@@ -226,35 +226,38 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       </article>
 
-      <Separator className='my-12' />
-
       {post.faq && post.faq.length > 0 && (
-        <section className='mt-12'>
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-3 font-headline text-xl">
-                        <HelpCircle className="w-5 h-5 text-primary"/>
-                        সাধারণ প্রশ্ন ও উত্তর (FAQ)
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <Accordion type="single" collapsible className="w-full">
-                        {post.faq.map((item, index) => (
-                            <AccordionItem value={`item-${index}`} key={index}>
-                                <AccordionTrigger className="text-left font-semibold">{item.question}</AccordionTrigger>
-                                <AccordionContent className="prose prose-lg max-w-none font-body">
-                                    <p>{item.answer}</p>
-                                </AccordionContent>
-                            </AccordionItem>
-                        ))}
-                    </Accordion>
-                </CardContent>
-            </Card>
-        </section>
+        <>
+          <Separator className='my-12' />
+          <section>
+              <Card>
+                  <CardHeader>
+                      <CardTitle className="flex items-center gap-3 font-headline text-xl">
+                          <HelpCircle className="w-5 h-5 text-primary"/>
+                          সাধারণ প্রশ্ন ও উত্তর (FAQ)
+                      </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                      <Accordion type="single" collapsible className="w-full">
+                          {post.faq.map((item, index) => (
+                              <AccordionItem value={`item-${index}`} key={index}>
+                                  <AccordionTrigger className="text-left font-semibold">{item.question}</AccordionTrigger>
+                                  <AccordionContent className="prose prose-lg max-w-none font-body">
+                                      <p>{item.answer}</p>
+                                  </AccordionContent>
+                              </AccordionItem>
+                          ))}
+                      </Accordion>
+                  </CardContent>
+              </Card>
+          </section>
+        </>
       )}
 
       {validRelatedTools.length > 0 && (
-          <aside className="mt-12">
+        <>
+          <Separator className='my-12' />
+          <aside>
             <Card className="bg-secondary/50">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-3 font-headline text-xl">
@@ -276,6 +279,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </CardContent>
             </Card>
           </aside>
+        </>
       )}
     </div>
   );
