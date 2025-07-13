@@ -19,7 +19,7 @@ import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
 import { saveAs } from 'file-saver';
 import { format } from 'date-fns';
-import { bn } from 'date-fns/locale';
+import { bn, enUS } from 'date-fns/locale';
 
 // Translations and Templates
 const translations = {
@@ -141,6 +141,7 @@ type FormData = z.infer<typeof FormSchema>;
 export default function NocLetterGenerator() {
     const [lang, setLang] = useState<'bn' | 'en'>('bn');
     const [generatedLetter, setGeneratedLetter] = useState('');
+    const [issueDate, setIssueDate] = useState('');
     const letterPreviewRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
 
@@ -176,6 +177,10 @@ export default function NocLetterGenerator() {
         }
     }, [watchedValues, lang]);
     
+    useEffect(() => {
+        setIssueDate(format(new Date(), 'PP', { locale: lang === 'bn' ? bn : enUS }));
+    }, [lang]);
+
      const handleReset = () => {
         reset();
         setGeneratedLetter('');
@@ -310,7 +315,7 @@ export default function NocLetterGenerator() {
                     </CardHeader>
                     <CardContent>
                         <div ref={letterPreviewRef} className="p-6 border rounded-md min-h-[400px] whitespace-pre-wrap bg-background text-sm">
-                            <p className="mb-4">{t.issueDate}: {format(new Date(), 'PP', { locale: lang === 'bn' ? bn : undefined })}</p>
+                            <p className="mb-4">{t.issueDate}: {issueDate}</p>
                             {generatedLetter}
                         </div>
                     </CardContent>
@@ -331,4 +336,3 @@ export default function NocLetterGenerator() {
         </div>
     );
 }
-
